@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip list *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:skillsmp.com)",
+      "Bash(python -c \"import app.core.validation, app.core.health, app.core.recovery, app.core.data_validation, app.error.validation_exception; print\\('Core imports OK'\\)\")",
+      "Bash(python *)",
+      "Bash(New-Item -ItemType Directory -Force -Path graphify-out)",
+      "Bash(Out-Null)",
+      "Bash(dir *)"
+    ]
+  }
+}

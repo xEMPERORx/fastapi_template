@@ -1,0 +1,26 @@
+[project]
+name = "fastapi-starter-template"
+version = "0.1.0"
+description = "Production-ready FastAPI starter with JWT, Google OAuth, RBAC, Redis, Celery, and Elasticsearch"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.18.4",
+    "asgiref>=3.11.1",
+    "asyncpg>=0.31.0",
+    "authlib>=1.6.9",
+    "bcrypt>=5.0.0",
+    "celery>=5.6.2",
+    "elasticsearch[async]>=9.3.0",
+    "fastapi-mail>=1.6.2",
+    "fastapi[standard]>=0.135.2",
+    "gevent>=25.9.1",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "pyjwt>=2.12.1",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "redis>=7.3.0",
+    "sqlalchemy>=2.0.48",
+]
