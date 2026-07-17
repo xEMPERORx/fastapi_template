@@ -760,7 +760,7 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.135.2"
+version = "0.139.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -769,15 +769,16 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/73/5903c4b13beae98618d64eb9870c3fac4f605523dd0312ca5c80dadbd5b9/fastapi-0.135.2.tar.gz", hash = "sha256:88a832095359755527b7f63bb4c6bc9edb8329a026189eed83d6c1afcf419d56", size = 395833, upload-time = "2026-03-23T14:12:41.697Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/95/d3f0ae10836324a2eab98a52b61210ac609f08200bf4bb0dc8132d32f78a/fastapi-0.139.2.tar.gz", hash = "sha256:333145a6891e9b5b3cfceb69baf817e8240cde4d4588ae5a10bf56ffacb6255e", size = 423428, upload-time = "2026-07-16T15:06:17.912Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/ea/18f6d0457f9efb2fc6fa594857f92810cadb03024975726db6546b3d6fcf/fastapi-0.135.2-py3-none-any.whl", hash = "sha256:0af0447d541867e8db2a6a25c23a8c4bd80e2394ac5529bd87501bbb9e240ca5", size = 117407, upload-time = "2026-03-23T14:12:43.284Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/c7/cb03251d9dfb177246a9809a76f189d21df32dbd4a845951881d11323b7f/fastapi-0.139.2-py3-none-any.whl", hash = "sha256:b9ad015a835173d59865e2f5d8296fbc2b317bf56a2ba1a5bfbdd03de2fd4b1c", size = 130234, upload-time = "2026-07-16T15:06:19.557Z" },
 ]
 
 [package.optional-dependencies]
 standard = [
     { name = "email-validator" },
     { name = "fastapi-cli", extra = ["standard"] },
+    { name = "fastar" },
     { name = "httpx" },
     { name = "jinja2" },
     { name = "pydantic-extra-types" },
@@ -845,6 +846,61 @@ sdist = { url = "https://files.pythonhosted.org/packages/a3/44/234755f0865a13c36
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/51/94fdfdf4fabfc560219a08908361fd29c8e668ae91eacaac3186e2a9d622/fastapi_mail-1.6.2-py3-none-any.whl", hash = "sha256:1992c416f1576c305130773360de989d78041c6dad9bdb7ac0072a9a78b02f84", size = 16111, upload-time = "2026-02-17T11:24:24.118Z" },
 ]
+
+[[package]]
+name = "fastapi-starter-template"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "aiosqlite" },
+    { name = "alembic" },
+    { name = "asgiref" },
+    { name = "asyncpg" },
+    { name = "authlib" },
+    { name = "bcrypt" },
+    { name = "celery" },
+    { name = "elasticsearch", extra = ["async"] },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "fastapi-mail" },
+    { name = "gevent" },
+    { name = "httpx" },
+    { name = "itsdangerous" },
+    { name = "pyjwt" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "redis" },
+    { name = "sqlalchemy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest-timeout" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "alembic", specifier = ">=1.18.4" },
+    { name = "asgiref", specifier = ">=3.11.1" },
+    { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "authlib", specifier = ">=1.6.9" },
+    { name = "bcrypt", specifier = ">=5.0.0" },
+    { name = "celery", specifier = ">=5.6.2" },
+    { name = "elasticsearch", extras = ["async"], specifier = ">=9.3.0" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.138.0" },
+    { name = "fastapi-mail", specifier = ">=1.6.2" },
+    { name = "gevent", specifier = ">=25.9.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "itsdangerous", specifier = ">=2.2.0" },
+    { name = "pyjwt", specifier = ">=2.12.1" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "redis", specifier = ">=7.3.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.48" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest-timeout", specifier = ">=2.4.0" }]
 
 [[package]]
 name = "fastar"
@@ -1844,6 +1900,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-timeout"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ac/82/4c9ecabab13363e72d880f2fb504c5f750433b2b6f16e99f4ec21ada284c/pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a", size = 17973, upload-time = "2025-05-05T19:44:34.99Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/b6/3127540ecdf1464a00e5a01ee60a1b09175f6913f0644ac748494d9c4b21/pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2", size = 14382, upload-time = "2025-05-05T19:44:33.502Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -2258,53 +2326,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c4/68/79977123bb7be889ad680d79a40f339082c1978b5cfcf62c2d8d196873ac/starlette-0.52.1.tar.gz", hash = "sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933", size = 2653702, upload-time = "2026-01-18T13:34:11.062Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/81/0d/13d1d239a25cbfb19e740db83143e95c772a1fe10202dda4b76792b114dd/starlette-0.52.1-py3-none-any.whl", hash = "sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74", size = 74272, upload-time = "2026-01-18T13:34:09.188Z" },
-]
-
-[[package]]
-name = "fastapi-starter-template"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "aiosqlite" },
-    { name = "alembic" },
-    { name = "asgiref" },
-    { name = "asyncpg" },
-    { name = "authlib" },
-    { name = "bcrypt" },
-    { name = "celery" },
-    { name = "elasticsearch", extra = ["async"] },
-    { name = "fastapi", extra = ["standard"] },
-    { name = "fastapi-mail" },
-    { name = "gevent" },
-    { name = "httpx" },
-    { name = "itsdangerous" },
-    { name = "pyjwt" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "redis" },
-    { name = "sqlalchemy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiosqlite", specifier = ">=0.22.1" },
-    { name = "alembic", specifier = ">=1.18.4" },
-    { name = "asgiref", specifier = ">=3.11.1" },
-    { name = "asyncpg", specifier = ">=0.31.0" },
-    { name = "authlib", specifier = ">=1.6.9" },
-    { name = "bcrypt", specifier = ">=5.0.0" },
-    { name = "celery", specifier = ">=5.6.2" },
-    { name = "elasticsearch", extras = ["async"], specifier = ">=9.3.0" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.135.2" },
-    { name = "fastapi-mail", specifier = ">=1.6.2" },
-    { name = "gevent", specifier = ">=25.9.1" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "itsdangerous", specifier = ">=2.2.0" },
-    { name = "pyjwt", specifier = ">=2.12.1" },
-    { name = "pytest-asyncio", specifier = ">=1.3.0" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "redis", specifier = ">=7.3.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.48" },
 ]
 
 [[package]]

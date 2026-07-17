@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Response
 from app.schema.auth import TokenResponse
-from app.error.custom_exception import UserNotVerified, UserUnauthenticated
+from app.core.rate_limiters import login_limiter
+from app.error.custom_exception import RateLimit, UserNotVerified, UserUnauthenticated
 from app.services.auth.password import verify_password
 from app.services.auth.token import create_access_token, create_refresh_token
 from app.settings import Config
@@ -23,6 +24,12 @@ class LoginUser(LoggedService):
         self.token_repo = token_repo
 
     async def login(self,form_data:OAuth2PasswordRequestForm,response:Response):
+
+        if not await login_limiter.is_allowed(form_data.username):
+            raise RateLimit(
+                message="Too many login attempts for this account. Please wait before trying again.",
+                headers={"Retry-After": str(login_limiter.window)},
+            )
 
         user = await self.user_repo.get_by_username(form_data.username)
 

@@ -8,6 +8,15 @@ from app.error.custom_exception import (
     InvalidToken,
     UserNotAuthenticated,
     UserNotFound,
+    RoleNotFound,
+    RoleExists,
+    PermissionNotFound,
+    PermissionExists,
+    GrantNotAllowed,
+    PermissionAlreadyGranted,
+    PermissionNotGranted,
+    RoleAlreadyAssigned,
+    RoleNotAssigned,
     create_exception_handler,
     create_global_handler,
 )
@@ -90,6 +99,52 @@ def register_exception(app: FastAPI):
                 "error_code": "user_not_found"
             }
         )
+    )
+
+    # RBAC exceptions
+    app.add_exception_handler(
+        RoleNotFound,
+        create_exception_handler(status_code=status.HTTP_404_NOT_FOUND)
+    )
+
+    app.add_exception_handler(
+        RoleExists,
+        create_exception_handler(status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    app.add_exception_handler(
+        PermissionNotFound,
+        create_exception_handler(status_code=status.HTTP_404_NOT_FOUND)
+    )
+
+    app.add_exception_handler(
+        PermissionExists,
+        create_exception_handler(status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    app.add_exception_handler(
+        GrantNotAllowed,
+        create_exception_handler(status_code=status.HTTP_403_FORBIDDEN)
+    )
+
+    app.add_exception_handler(
+        PermissionAlreadyGranted,
+        create_exception_handler(status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    app.add_exception_handler(
+        PermissionNotGranted,
+        create_exception_handler(status_code=status.HTTP_404_NOT_FOUND)
+    )
+
+    app.add_exception_handler(
+        RoleAlreadyAssigned,
+        create_exception_handler(status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    app.add_exception_handler(
+        RoleNotAssigned,
+        create_exception_handler(status_code=status.HTTP_404_NOT_FOUND)
     )
 
     # Rate limiting exception

@@ -9,7 +9,31 @@
       "Bash(python *)",
       "Bash(New-Item -ItemType Directory -Force -Path graphify-out)",
       "Bash(Out-Null)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(python3 *)",
+      "Bash(openssl rand *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(uv --version)",
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(rm -f test.db)",
+      "Bash(uv add *)",
+      "Bash(rm -f test.db pytest_out.log)",
+      "Bash(npm --version)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest init -y -b neutral)",
+      "Bash(npx shadcn@latest init -y)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(npx shadcn@latest init -b base -t vite -y)",
+      "Bash(docker version *)",
+      "Bash(powershell -Command \"Start-Process 'C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe'\")",
+      "Bash(docker compose *)",
+      "Bash(docker rm c3774fed0b4e *)",
+      "Bash(curl -s -o /dev/null -w \"index: %{http_code}\\\\n\" http://localhost:8000/)",
+      "Bash(curl -s http://localhost:8000/api/v1/health)",
+      "Bash(curl -s -o /dev/null -w \"health-live: %{http_code}\\\\n\" http://localhost:8000/api/v1/health/live)",
+      "Bash(curl -s http://localhost:8000/)"
     ]
   }
 }

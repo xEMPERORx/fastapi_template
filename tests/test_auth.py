@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient
 from app.main import app
 from app.services.auth.auth import get_current_user
+from tests.conftest import verify_user
 import os
 os.environ["ENV"] = "testing"
 
@@ -23,7 +24,7 @@ async def test_register_user(ac: AsyncClient):
     payload = {
         "email": "test@example.com",
         "username": "testuser",
-        "password": "password123"
+        "password": "Password123!"
     }
     response = await ac.post("/api/v1/auth/register", json=payload)
     assert response.status_code == 201
@@ -45,14 +46,15 @@ async def test_login_user(ac: AsyncClient):
     """Test POST /api/v1/auth/login using Form Data"""
     login_data = {
         "username": "testuser",
-        "password": "password123"
+        "password": "Password123!"
     }
     payload = {
         "email": "test@example.com",
         "username": "testuser",
-        "password": "password123"
+        "password": "Password123!"
     }
     response = await ac.post("/api/v1/auth/register", json=payload)
+    await verify_user("testuser")
     response = await ac.post("/api/v1/auth/login", data=login_data)
 
     assert response.status_code == 200
@@ -70,13 +72,13 @@ async def test_get_current_user_info(ac: AsyncClient):
 
     assert response.status_code == 200
     assert response.json()["username"] == "testuser"
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.mark.asyncio
 async def test_get_user_unauthenticated(ac: AsyncClient):
     """Scenario: User provides NO token at all"""
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_current_user, None)
 
     response = await ac.get("/api/v1/auth/user")
 
@@ -98,7 +100,7 @@ async def test_login_wrong_password(ac: AsyncClient):
     reg_payload = {
         "email": "wrongpass@example.com",
         "username": "wrongpasstest",
-        "password": "correctpassword123"
+        "password": "CorrectPassword123!"
     }
     await ac.post("/api/v1/auth/register", json=reg_payload)
 

@@ -1,6 +1,8 @@
 from elasticsearch import AsyncElasticsearch
 
+from app.core.circuit_breakers import es_breaker
 from app.core.logger import LoggedRepository
+from app.core.recovery import RetryConfig, async_retry
 
 
 class SearchRepository(LoggedRepository):
@@ -69,4 +71,9 @@ class SearchRepository(LoggedRepository):
             "sort": [{"_score": {"order": "desc"}}],
         }
 
-        return await self.es_client.search(index=self.index_name, body=query)
+        async def _do_search():
+            return await self.es_client.search(index=self.index_name, body=query)
+
+        return await es_breaker.call(
+            async_retry, _do_search, config=RetryConfig(max_retries=2, base_delay=0.2)
+        )

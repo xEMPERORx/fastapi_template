@@ -54,9 +54,9 @@ class UserDetailResponse(UserResponse):
 In existing repository:
 ```python
 async def get_by_id(self, user_id: int) -> User | None:
-    from sqlalchemy.orm import selectin
+    from sqlalchemy.orm import selectinload
     result = await self.db.execute(
-        select(User).options(selectin(User.roles)).where(User.id == user_id)
+        select(User).options(selectinload(User.roles)).where(User.id == user_id)
     )
     return result.scalar_one_or_none()
 ```
@@ -103,7 +103,8 @@ async def get_user(
 - Use `response_model` on every route for automatic serialization + validation
 - Use `model_config = {"from_attributes": True}` on response schemas (not create schemas)
 - Raise custom exceptions from services, never return error tuples
-- Auth endpoints: add `current_user = Depends(get_current_user)` or `Depends(role_required([...]))`
+- Auth endpoints: add `current_user = Depends(get_current_user)`, `Depends(role_required([...]))`, or `Depends(permission_required("x:y"))`
+- Endpoints that grant a role/permission to a user (path params `role_id`/`permission_id`) use `Depends(grant_role_required())` / `Depends(grant_permission_required())` instead — the allowed set is per-actor and data-dependent (see `app/core/rbac.py`), not a fixed permission string
 
 ## What NOT To Do
 

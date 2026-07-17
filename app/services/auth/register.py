@@ -50,7 +50,7 @@ class RegisterUser(LoggedService):
             password=hashed_password,
         )
 
-        self.send_mail(user_data)
+        self.bg_task.add_task(self.send_mail, user_data)
 
         return {
             "message":"Account Created Successfully! Check mail to verify your Account",

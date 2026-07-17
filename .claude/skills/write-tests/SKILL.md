@@ -95,6 +95,25 @@ async def test_full_flow(ac: AsyncClient):
 | Resource not found | 404 |
 | Rate limited | 429 |
 
+## Hierarchical RBAC Tests
+
+`tests/test_hierarchy_rbac.py` is the reference for testing delegated-admin scenarios:
+- Nothing can set `is_superuser` through the API — tests promote a user directly via a
+  DB session (`TestingSessionLocal` from `tests/conftest.py`), simulating what
+  `app/cli/seed.py` does, since no endpoint accepts that field.
+- Test grant-delegation denial explicitly: a role with no `grantable_roles`/
+  `grantable_permissions` configured must get 403 when its holder tries to assign that
+  role/permission to someone, and 204 once an admin configures the delegation.
+- `tests/test_permissions_roles.py`'s `override_permission_dependencies` fixture
+  bypasses `permission_checker`, `role_checker`, and the `grant_role_required()`/
+  `grant_permission_required()` factories' `checker` — extend the `bypassed_names` set
+  there if you add a new dependency factory with its own inner function name.
+
+Because tests run without Redis/Elasticsearch/a Celery broker, always use
+`pytest --timeout=30` (via `pytest-timeout`, already a dev dependency) — a call that
+forgets a connection timeout (see the `fastapi-best-practices` skill's Resilience
+section) will otherwise hang the whole suite instead of failing fast.
+
 ## Core Module Unit Tests
 
 For `app/core/` modules, write plain unit tests (no HTTP, no DB):

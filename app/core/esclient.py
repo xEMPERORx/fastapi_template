@@ -6,7 +6,8 @@ ES_HOST = Config.ELASTICSEARCH_URL
 es_client = AsyncElasticsearch(
     hosts=[ES_HOST],
     retry_on_timeout=True,
-    max_retries=10
+    max_retries=2,
+    request_timeout=5,
 )
 
 async def get_es_client():

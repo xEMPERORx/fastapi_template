@@ -16,6 +16,12 @@ class PermissionRepository(LoggedRepository):
     async def get_by_name(self, name: str) -> Permission | None:
         return await self.db.scalar(select(Permission).where(Permission.name == name))
 
+    async def get_by_ids(self, permission_ids: list[int]) -> list[Permission]:
+        if not permission_ids:
+            return []
+        result = await self.db.scalars(select(Permission).where(Permission.id.in_(permission_ids)))
+        return result.all()
+
     async def create(self, permission: PermissionCreate) -> Permission:
         db_permission = Permission(name=permission.name)
         self.db.add(db_permission)

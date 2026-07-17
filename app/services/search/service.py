@@ -1,6 +1,7 @@
 from app.repositories.search.search import SearchRepository
 from app.schema.search import SearchResponse, SearchResult
 from app.core.logger import LoggedService
+from app.core.validation import sanitize_text
 
 
 class SearchService(LoggedService):
@@ -15,8 +16,8 @@ class SearchService(LoggedService):
         limit: int,
     ) -> SearchResponse:
         response = await self.repo.search(
-            query_text=query_text,
-            resource_type=resource_type,
+            query_text=sanitize_text(query_text),
+            resource_type=sanitize_text(resource_type) if resource_type else resource_type,
             page=page,
             limit=limit,
         )

@@ -1,11 +1,12 @@
 import uuid
 from typing import Optional
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.logger import LoggedRepository
-from app.models.db_model import User
+from app.models.db_model import Permission, Role, User
 
 
 class UserRepository(LoggedRepository):
@@ -26,6 +27,8 @@ class UserRepository(LoggedRepository):
         email: str,
         password: Optional[str],
         is_verified: bool = False,
+        is_superuser: bool = False,
+        created_by_id: Optional[uuid.UUID] = None,
     ) -> User:
         user = User(
             id=uuid.uuid4(),
@@ -33,6 +36,8 @@ class UserRepository(LoggedRepository):
             email=email,
             password=password,
             is_verified=is_verified,
+            is_superuser=is_superuser,
+            created_by_id=created_by_id,
         )
         self.db.add(user)
         await self.db.commit()
@@ -48,10 +53,54 @@ class UserRepository(LoggedRepository):
     async def get_by_id(self, user_id: uuid.UUID) -> User | None:
         return await self.db.scalar(select(User).where(User.id == user_id))
 
+    async def get_by_id_with_grants(self, user_id: uuid.UUID) -> User | None:
+        """Fetch a user with roles, role permissions, and direct permissions eagerly loaded."""
+        return await self.db.scalar(
+            select(User)
+            .options(
+                selectinload(User.roles).selectinload(Role.permissions),
+                selectinload(User.permissions),
+            )
+            .where(User.id == user_id)
+        )
+
+    async def list_all(self, skip: int, limit: int) -> list[User]:
+        result = await self.db.scalars(
+            select(User)
+            .options(selectinload(User.roles))
+            .offset(skip)
+            .limit(limit)
+            .order_by(User.username)
+        )
+        return result.unique().all()
+
+    async def count_all(self) -> int:
+        return await self.db.scalar(select(func.count()).select_from(User)) or 0
+
     async def set_verified(self, user: User) -> None:
         user.is_verified = True
         await self.db.commit()
 
     async def set_password(self, user: User, hashed_password: str) -> None:
         user.password = hashed_password
+        await self.db.commit()
+
+    async def has_permission(self, user_id: uuid.UUID, permission_id: int) -> bool:
+        from app.models.db_model import user_permissions
+
+        return bool(
+            await self.db.scalar(
+                select(exists().where(
+                    user_permissions.c.user_id == user_id,
+                    user_permissions.c.permission_id == permission_id,
+                ))
+            )
+        )
+
+    async def grant_permission(self, user: User, permission: Permission) -> None:
+        user.permissions.append(permission)
+        await self.db.commit()
+
+    async def revoke_permission(self, user: User, permission: Permission) -> None:
+        user.permissions.remove(permission)
         await self.db.commit()

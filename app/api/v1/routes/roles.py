@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from app.schema.role import RoleCreate, RoleUpdate, Role
+from app.schema.role import RoleCreate, RoleUpdate, Role, RoleGrants
 from typing import Annotated
 from app.core.dependency_factory import get_role_service
-import uuid
 from app.core.dependencies import permission_required
 from app.services.roles.service import RoleService
 from app.core.logger import log_function
@@ -26,14 +25,13 @@ async def read_role(
 ):
     return await role_service.get_role(role_id)
 
-@router.get("/{user_id}/assign/{role_id}" , dependencies=[Depends(permission_required("role:add:user"))])
+@router.get("/{role_id}/grants", response_model=RoleGrants,dependencies=[Depends(permission_required("role:read.id"))])
 @log_function
-async def add_role(
-    role_id:int,
-    user_id:uuid.UUID,
+async def read_role_grants(
+    role_id: int,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ):
-    return await role_service.assign_role_user(role_id, user_id)
+    return await role_service.get_role_grants(role_id)
 
 @router.put("/{role_id}", response_model=Role,dependencies=[Depends(permission_required("role:update"))])
 @log_function
@@ -78,3 +76,66 @@ async def remove_permission_from_role_endpoint(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ):
     return await role_service.remove_permission_from_role(role_id, permission_id)
+
+
+# ----------------------------------------------------------------------
+# Grant delegation configuration. Set up at role-authoring time: which
+# roles/permissions a *holder* of this role is allowed to hand out to
+# other users via the /users/{user_id}/roles and /permissions endpoints.
+# Restricted to whoever can configure roles at all ("role:update").
+# ----------------------------------------------------------------------
+
+@router.post(
+    "/{role_id}/grantable-roles/{grantable_role_id}",
+    status_code=204,
+    dependencies=[Depends(permission_required("role:update"))],
+)
+@log_function
+async def add_grantable_role_endpoint(
+    role_id: int,
+    grantable_role_id: int,
+    role_service: Annotated[RoleService, Depends(get_role_service)],
+):
+    await role_service.add_grantable_role(role_id, grantable_role_id)
+
+
+@router.delete(
+    "/{role_id}/grantable-roles/{grantable_role_id}",
+    status_code=204,
+    dependencies=[Depends(permission_required("role:update"))],
+)
+@log_function
+async def remove_grantable_role_endpoint(
+    role_id: int,
+    grantable_role_id: int,
+    role_service: Annotated[RoleService, Depends(get_role_service)],
+):
+    await role_service.remove_grantable_role(role_id, grantable_role_id)
+
+
+@router.post(
+    "/{role_id}/grantable-permissions/{permission_id}",
+    status_code=204,
+    dependencies=[Depends(permission_required("role:update"))],
+)
+@log_function
+async def add_grantable_permission_endpoint(
+    role_id: int,
+    permission_id: int,
+    role_service: Annotated[RoleService, Depends(get_role_service)],
+):
+    await role_service.add_grantable_permission(role_id, permission_id)
+
+
+@router.delete(
+    "/{role_id}/grantable-permissions/{permission_id}",
+    status_code=204,
+    dependencies=[Depends(permission_required("role:update"))],
+)
+@log_function
+async def remove_grantable_permission_endpoint(
+    role_id: int,
+    permission_id: int,
+    role_service: Annotated[RoleService, Depends(get_role_service)],
+):
+    await role_service.remove_grantable_permission(role_id, permission_id)

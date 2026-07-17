@@ -1,10 +1,8 @@
 from fastapi import FastAPI, Request
 
 from app.core.logger import log_error, logger
-from app.core.fixed_window_ratelimit import FixedWindowLimiter
+from app.core.rate_limiters import limiter
 from app.error.custom_exception import RateLimit
-
-limiter = FixedWindowLimiter(requests=10, window_seconds=60)
 
 
 def register_ratelimit_middleware(app: FastAPI):
@@ -16,7 +14,7 @@ def register_ratelimit_middleware(app: FastAPI):
         logger.info("Rate limit check for %s", client_ip)
 
         try:
-            if not limiter.is_allowed(client_ip):
+            if not await limiter.is_allowed(client_ip):
                 raise RateLimit(
                     message="Too many requests. Please slow down.",
                     headers={
@@ -30,7 +28,7 @@ def register_ratelimit_middleware(app: FastAPI):
 
             # Add rate limit headers
             response.headers["X-RateLimit-Limit"] = str(limiter.requests)
-            response.headers["X-RateLimit-Remaining"] = str(limiter.get_remaining(client_ip))
+            response.headers["X-RateLimit-Remaining"] = str(await limiter.get_remaining(client_ip))
 
             return response
 

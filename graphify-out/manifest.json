@@ -1,0 +1,478 @@
+{
+  "F:\\Development\\Template\\fastapi_template\\app\\main.py": {
+    "mtime": 1784225332.1189451,
+    "hash": "1b241427d322f9246e4181c0f6b007cf"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\settings.py": {
+    "mtime": 1784217852.3690183,
+    "hash": "f08014e19320264a849e4f205ef9ba23"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\auth.py": {
+    "mtime": 1784217852.3490052,
+    "hash": "b6ebc9b56a6c8bfee6050f560f66ebf3"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\google_oauth.py": {
+    "mtime": 1784217852.3490052,
+    "hash": "68c87e3c24470ad43936af5716c9f2ff"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\health.py": {
+    "mtime": 1784217852.3490052,
+    "hash": "e62758f0867dcd03c9155f5023c5d1d9"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\permission.py": {
+    "mtime": 1784217852.3500054,
+    "hash": "d75d01f1cb9e4c7a61dc2a87c8833f7d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\roles.py": {
+    "mtime": 1784225103.539993,
+    "hash": "3a6fbe7a9f183bf8db4846d5556f09a2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\search.py": {
+    "mtime": 1784217852.3500054,
+    "hash": "7dbf5e7ce75648d8198a457af81b8a2d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\api\\v1\\routes\\users.py": {
+    "mtime": 1784222714.5182102,
+    "hash": "96400a4645c65b9563d49dd327589bce"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\cli\\seed.py": {
+    "mtime": 1784222839.7386873,
+    "hash": "fe1cc2b49baf3216c2314ecb3dbb02d4"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\cli\\__init__.py": {
+    "mtime": 1784222831.4525514,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\circuit_breakers.py": {
+    "mtime": 1784223423.4287097,
+    "hash": "c1787549468e262391884f961355ecdf"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\data_validation.py": {
+    "mtime": 1784217852.3510056,
+    "hash": "c7ba472086d4fd30b902f40558475b01"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\dependencies.py": {
+    "mtime": 1784222557.5153704,
+    "hash": "250b3aa3a010bba0b5f2b934f3c6d7c3"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\dependency_factory.py": {
+    "mtime": 1784225090.7365057,
+    "hash": "308d043029387ce1a86e1b80fa683c77"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\esclient.py": {
+    "mtime": 1784223496.8767056,
+    "hash": "0553e748d370b1a27ff0638e96a5c313"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\fixed_window_ratelimit.py": {
+    "mtime": 1784223329.6685247,
+    "hash": "bb62060ece0233ba1b32f511333968b1"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\health.py": {
+    "mtime": 1784222218.656961,
+    "hash": "d7753b5a54affd349863ee722457b81e"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\logger.py": {
+    "mtime": 1784217852.353006,
+    "hash": "90af09134de541c7dbe7a46dfdd4b115"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\rate_limiters.py": {
+    "mtime": 1784223367.30464,
+    "hash": "a07b20b40c5fb1d538e92ac6e792348f"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\rbac.py": {
+    "mtime": 1784222530.767452,
+    "hash": "c7eb82baba237ad4a5682cde6991bdfe"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\recovery.py": {
+    "mtime": 1784217852.353006,
+    "hash": "8ff9f1be9c4726dd356966cddf51eee2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\core\\validation.py": {
+    "mtime": 1784222319.5664935,
+    "hash": "83aeadf4b9782f8673058b55fe7c6bc6"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\database\\db.py": {
+    "mtime": 1784217852.354006,
+    "hash": "3ada6b8474f0d3911d2c447deb0e8b1a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\database\\redis_db.py": {
+    "mtime": 1784223286.852575,
+    "hash": "7835ecc5f84cd38d3e8f3bbdb595e311"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\error\\custom_exception.py": {
+    "mtime": 1784222227.288359,
+    "hash": "ebb0bdd489a1d2fa7b8c9e6b0ee69f4e"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\error\\register_error.py": {
+    "mtime": 1784222239.2513914,
+    "hash": "911d5b70a6fdfa33aec003aef4b1a946"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\error\\validation_exception.py": {
+    "mtime": 1784217852.3550062,
+    "hash": "3785fb2f3abe622706de109bdf05be99"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\middleware\\logger_middleware.py": {
+    "mtime": 1784217852.3560069,
+    "hash": "1f7168925cc1053ae13cbf4ed26e0638"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\middleware\\ratelimiting_middleware.py": {
+    "mtime": 1784223373.150009,
+    "hash": "96105db99bf6d662bd9ee7babb817e08"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\middleware\\security_middleware.py": {
+    "mtime": 1784217852.357008,
+    "hash": "054f715dee40354879503ac759167ec3"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\models\\auth.py": {
+    "mtime": 1784222397.2818525,
+    "hash": "136d7d03ece224d679be86d780c9c480"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\models\\db_model.py": {
+    "mtime": 1784222413.8969498,
+    "hash": "bd2756b9b78bcc23949f512a811e05d9"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\models\\rbac.py": {
+    "mtime": 1784222409.3979397,
+    "hash": "4e0d28f0fd0dfb18eaf990d47402d8f3"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\queue\\celery.py": {
+    "mtime": 1784224309.3110042,
+    "hash": "6b1178a0253180aadc2ffe0d7c84b5af"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\queue\\task.py": {
+    "mtime": 1784223306.4084058,
+    "hash": "32d2fafdfc772afa4a607e150f2e269a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\repositories\\auth\\user.py": {
+    "mtime": 1784222521.0151184,
+    "hash": "0d314ce88c3635397329274c006c269d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\repositories\\rbac\\permission.py": {
+    "mtime": 1784222607.3864996,
+    "hash": "b7f2fbce580ec293fe795d94d3939c09"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\repositories\\rbac\\role.py": {
+    "mtime": 1784222600.7272875,
+    "hash": "5fcc9679683ed9489409c8986026bf6f"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\repositories\\search\\search.py": {
+    "mtime": 1784223431.4170446,
+    "hash": "22ae906c073524b220a9d92524c72ad2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\schema\\auth.py": {
+    "mtime": 1784222306.764137,
+    "hash": "1287d9fbee9f39d903d5988abaa30587"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\schema\\permission.py": {
+    "mtime": 1784222311.568055,
+    "hash": "6f0d0a89a011fca0a168c32924dafd0f"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\schema\\role.py": {
+    "mtime": 1784225070.919981,
+    "hash": "31226b69ffe447d2bf707a52c8bb1cd4"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\schema\\search.py": {
+    "mtime": 1784217852.3620114,
+    "hash": "4eddf623c5888ada1f7000c4478b8926"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\schema\\user.py": {
+    "mtime": 1784222581.6189177,
+    "hash": "ac59eb9cae1c452218ae4751c1cfb7a4"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\auth.py": {
+    "mtime": 1784217852.3630116,
+    "hash": "ed96a070ed4630f0a369cb0a6f9e09d9"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\current_user.py": {
+    "mtime": 1784222536.207772,
+    "hash": "5990022184bba546d311378bbcff8e22"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\google_oauth.py": {
+    "mtime": 1784222327.3120909,
+    "hash": "c4e05e0f03f0806f68f7d903825e0e8e"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\login.py": {
+    "mtime": 1784223385.595181,
+    "hash": "550c68f9d293631d17b748eb4ab5e436"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\logout.py": {
+    "mtime": 1784217852.3640177,
+    "hash": "3701c276f3d57aaf4df4f55ef33287f8"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\refresh.py": {
+    "mtime": 1784217852.3650174,
+    "hash": "2098791d8383866fb47235e9be036136"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\register.py": {
+    "mtime": 1784224033.2891698,
+    "hash": "b6b7385bee4e253fc3dfda34cfc2fc6d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\reset_password.py": {
+    "mtime": 1784223443.820072,
+    "hash": "2be11f6c07382b68f63a7630a7c65c07"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\auth\\verify.py": {
+    "mtime": 1784217852.3660176,
+    "hash": "807bdd669b91c334203d4f94759fc745"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\permission\\service.py": {
+    "mtime": 1784222851.629661,
+    "hash": "86c5a31285cb4e75246d53d64bb667c1"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\roles\\service.py": {
+    "mtime": 1784225083.9336126,
+    "hash": "9850b2477478f0bddebc72213735520a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\search\\service.py": {
+    "mtime": 1784222335.348808,
+    "hash": "efb8a28bf574c2528a30d0b49a20e612"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\users\\service.py": {
+    "mtime": 1784222702.9529796,
+    "hash": "ee9d72c13076d11cb345647c3e744e8d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\verify\\mail_config.py": {
+    "mtime": 1784217852.3680177,
+    "hash": "8b635b4806fd9f9304f9e4a41abfeaeb"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\verify\\mail_verify.py": {
+    "mtime": 1784217852.3680177,
+    "hash": "733902605f67ee95b056bd706bb5238a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\verify\\password_reset.py": {
+    "mtime": 1784223456.911157,
+    "hash": "2ac1f77f7f7a858a804b8c20b298cd7d"
+  },
+  "F:\\Development\\Template\\fastapi_template\\app\\services\\verify\\utils.py": {
+    "mtime": 1784217852.3690183,
+    "hash": "b26d0462c16dcb17811af1682a9ec5b7"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\vite.config.ts": {
+    "mtime": 1784224236.9245489,
+    "hash": "11c5fef3a5dae2867af4ea3a3d84baeb"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\App.tsx": {
+    "mtime": 1784225197.2445073,
+    "hash": "0ac360c23ba6a89db6f4e01cabeb2159"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\main.tsx": {
+    "mtime": 1784225202.3088932,
+    "hash": "4e6eb94d2e7b7f0746f2fc355cef6325"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\PageHeader.tsx": {
+    "mtime": 1784224952.4824605,
+    "hash": "08a8e39339ccbf4777e42befee066620"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ProtectedRoute.tsx": {
+    "mtime": 1784224948.416412,
+    "hash": "07b66a913bc08f51022d6218fbc1b9c4"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\layout\\AppLayout.tsx": {
+    "mtime": 1784224943.7061508,
+    "hash": "733797ffabe60af1467d6ccb8c37976a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\roles\\RoleManageDialog.tsx": {
+    "mtime": 1784225263.2819834,
+    "hash": "780fd122c20444846a3e24032e2bea64"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\avatar.tsx": {
+    "mtime": 1784224702.7689857,
+    "hash": "8b41492907a73176027427a3f0fd2302"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\badge.tsx": {
+    "mtime": 1784224702.137797,
+    "hash": "e4ec840217040d5630ee6ed7213a1d72"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\button.tsx": {
+    "mtime": 1784224680.0757928,
+    "hash": "e04ce5251d6b0dd04020988126c905e9"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\card.tsx": {
+    "mtime": 1784224702.27611,
+    "hash": "bd5f88ad2d983dd6c4561d63824c80ba"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\checkbox.tsx": {
+    "mtime": 1784224703.2232795,
+    "hash": "a4d07bd76d19990394bdf3b24a4a28b2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\command.tsx": {
+    "mtime": 1784224704.397668,
+    "hash": "a25ff237f1693d4196bd45681996572a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\dialog.tsx": {
+    "mtime": 1784224703.916832,
+    "hash": "39bdf57a8509073bf0244be9ed0f5b62"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\dropdown-menu.tsx": {
+    "mtime": 1784224702.009819,
+    "hash": "6f9529ea4c29ff64277a089509116843"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\input-group.tsx": {
+    "mtime": 1784224704.2227907,
+    "hash": "03cf28a02ebc719ddb74e9ad1a2dfbda"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\input.tsx": {
+    "mtime": 1784224701.4988344,
+    "hash": "0607b02d99a2e92f9509223f36ccc6ec"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\label.tsx": {
+    "mtime": 1784224701.6467566,
+    "hash": "92c6cf712c42f55463403a9241294aa0"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\popover.tsx": {
+    "mtime": 1784224703.361805,
+    "hash": "3cb9c412624579717c4ad67965d80a1c"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\select.tsx": {
+    "mtime": 1784224702.4509163,
+    "hash": "ab95f478cb74d1906b07425c15b124cc"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\separator.tsx": {
+    "mtime": 1784224702.921251,
+    "hash": "e29d263d0592b88a0622f56c03124879"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\sheet.tsx": {
+    "mtime": 1784224704.0752883,
+    "hash": "43ad8bec991f7a28d2aa22d4f374e6b7"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\skeleton.tsx": {
+    "mtime": 1784224703.4895139,
+    "hash": "0e6e825c43d858d98c9903f4da975382"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\sonner.tsx": {
+    "mtime": 1784224702.6172986,
+    "hash": "31b3cb497e9623cf2f268286b3b413ca"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\table.tsx": {
+    "mtime": 1784224701.7645893,
+    "hash": "44f87727e60080863edb00fdd2fcd8da"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\tabs.tsx": {
+    "mtime": 1784224703.0799148,
+    "hash": "429035bc858475cd3bcedbb08a5ba8da"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\components\\ui\\textarea.tsx": {
+    "mtime": 1784224703.7545955,
+    "hash": "d448d2a90e48542e51b93a1189127bf2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\lib\\api.ts": {
+    "mtime": 1784224832.8729024,
+    "hash": "0473a405579b1e6fc572b64e6fd712b6"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\lib\\auth-store.ts": {
+    "mtime": 1784224822.3183138,
+    "hash": "8b36c5b6f3d70a05876625d7e995fe78"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\lib\\endpoints.ts": {
+    "mtime": 1784225116.1259773,
+    "hash": "e4e549bcd3e8e9ee9e6316bde6c65ef8"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\lib\\types.ts": {
+    "mtime": 1784225107.9467177,
+    "hash": "0dc901a7efeb99c0f51d726dd8a2f94c"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\lib\\utils.ts": {
+    "mtime": 1784224680.210453,
+    "hash": "5a6fd53fdcf2be529e9cc0b718fde352"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\pages\\LoginPage.tsx": {
+    "mtime": 1784224969.2895937,
+    "hash": "866a727d7b924519a6308f87bc034ebf"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\pages\\PermissionsPage.tsx": {
+    "mtime": 1784225268.2951913,
+    "hash": "b75d4a878ebf2edde384fd755d1f80b5"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\pages\\RolesPage.tsx": {
+    "mtime": 1784225272.591905,
+    "hash": "67a2cf6f6a5c03d8610bb3c74b753e09"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\pages\\UserDetailPage.tsx": {
+    "mtime": 1784225288.4986222,
+    "hash": "3ea0dfde5930914838b8a6c0cd108888"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\src\\pages\\UsersListPage.tsx": {
+    "mtime": 1784224993.236151,
+    "hash": "b92d301c22c9a27e5813f76490fca828"
+  },
+  "F:\\Development\\Template\\fastapi_template\\migrations\\env.py": {
+    "mtime": 1784217852.4611547,
+    "hash": "5504ef137c2d35e854bbcf12b0644aeb"
+  },
+  "F:\\Development\\Template\\fastapi_template\\migrations\\versions\\10328bfc2473_create_initial_tables.py": {
+    "mtime": 1784217852.462155,
+    "hash": "b6839daaa6c32ecc0d4b1b0c77789368"
+  },
+  "F:\\Development\\Template\\fastapi_template\\migrations\\versions\\2d86ed6bd641_hierarchical_rbac.py": {
+    "mtime": 1784222449.3154156,
+    "hash": "c23bbd8fc227e3f68d57153e795a3d98"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\conftest.py": {
+    "mtime": 1784223397.649936,
+    "hash": "8fe92b36491bf733063066de7abcc145"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_auth.py": {
+    "mtime": 1784222353.231969,
+    "hash": "e935f2d7272ee3bfa6117748b91c332c"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_data_validation.py": {
+    "mtime": 1784217852.4641552,
+    "hash": "dfc8117db8c8f46c57534b46b8b3c22c"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_hierarchy_rbac.py": {
+    "mtime": 1784222818.2392058,
+    "hash": "0c51955880e5354043d0676f1e30f925"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_permissions_roles.py": {
+    "mtime": 1784222776.256518,
+    "hash": "f05adfe662e3b14d512ec1ab5f2953aa"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_recovery.py": {
+    "mtime": 1784217852.4651556,
+    "hash": "c2d40d3f552cfee11d13b46977933f2b"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_security.py": {
+    "mtime": 1784217852.4651556,
+    "hash": "1b6fefd814d14f5c417256956c4af0f4"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\test_validation.py": {
+    "mtime": 1784217852.4661558,
+    "hash": "e48d1a2a1804f81dbf061b42d5eb1fc2"
+  },
+  "F:\\Development\\Template\\fastapi_template\\tests\\__init__.py": {
+    "mtime": 1784217852.4631555,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "F:\\Development\\Template\\fastapi_template\\CLAUDE.md": {
+    "mtime": 1784217852.347005,
+    "hash": "da20fac15b4a9d7eed68c8b1b56d85a5"
+  },
+  "F:\\Development\\Template\\fastapi_template\\docker-compose.yml": {
+    "mtime": 1784217852.3690183,
+    "hash": "08d469010fe811ff5999b4948773480b"
+  },
+  "F:\\Development\\Template\\fastapi_template\\README.md": {
+    "mtime": 1784217852.347005,
+    "hash": "e237a0bd3bcf684c0c84c779e4a5d39a"
+  },
+  "F:\\Development\\Template\\fastapi_template\\requirements.txt": {
+    "mtime": 1784225735.38005,
+    "hash": "b429e53418c0f9e6f7477122565ef048"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\index.html": {
+    "mtime": 1784225209.594612,
+    "hash": "29d23d961dfb4f5fafd7f42a572bd888"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\README.md": {
+    "mtime": 1784223970.4993339,
+    "hash": "10495bfcc6c568eca4dab6dd5df795d3"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\public\\favicon.svg": {
+    "mtime": 1784223970.5701468,
+    "hash": "7e840862161341271697daa99a40d76b"
+  },
+  "F:\\Development\\Template\\fastapi_template\\frontend\\public\\icons.svg": {
+    "mtime": 1784223970.5963578,
+    "hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  }
+}

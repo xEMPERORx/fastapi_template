@@ -4,6 +4,8 @@ from fastapi import BackgroundTasks
 from app.services.verify import mail_config,utils
 from app.settings import Config
 import logging
+from app.core.circuit_breakers import redis_breaker
+from app.core.recovery import RetryConfig, async_retry
 from app.database.redis_db import redis_connect
 from app.repositories.auth.user import UserRepository
 from app.core.logger import LoggedService
@@ -23,7 +25,10 @@ class ResetPassword(LoggedService):
         try:
             token = utils.create_url_safe_token({"email": user_data.email})
 
-            await redis.setex(f"reset_token:{token}", 600, user_data.email)
+            async def _store_token():
+                await redis.setex(f"reset_token:{token}", 600, user_data.email)
+
+            await redis_breaker.call(async_retry, _store_token, config=RetryConfig(max_retries=2, base_delay=0.2))
 
             link = f"http://{Config.DOMAIN}/api/v1/auth/reset/password/{token}/verify"
             html = f"""

@@ -14,6 +14,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.logger import logger
 
 
@@ -47,12 +50,18 @@ class HealthReport:
         }
 
 
-async def check_db(db_session_factory) -> HealthStatus:
-    """Ping the database with a lightweight query."""
+async def check_db(db: AsyncSession) -> HealthStatus:
+    """Ping the database with a lightweight query using an already-open session.
+
+    Takes a session resolved through FastAPI's normal `Depends(get_db)` (see
+    app/api/v1/routes/health.py) rather than a raw session-factory function —
+    that way it shares the same connection-acquisition path (and, in tests,
+    the same dependency override) as every other route, instead of driving
+    a second, independently-constructed engine by hand.
+    """
     start = time.monotonic()
     try:
-        async with db_session_factory() as session:
-            await session.execute("SELECT 1")
+        await db.execute(text("SELECT 1"))
         latency = (time.monotonic() - start) * 1000
         return HealthStatus(healthy=True, service="database", latency_ms=latency, detail="OK")
     except Exception as exc:
@@ -95,15 +104,15 @@ async def check_elasticsearch(es_client) -> HealthStatus:
 
 
 async def run_all_checks(
-    db_session_factory,
+    db: AsyncSession | None = None,
     redis_client=None,
     es_client=None,
 ) -> HealthReport:
     """Run all registered health checks and aggregate the result."""
     checks: list[HealthStatus] = []
 
-    if db_session_factory:
-        checks.append(await check_db(db_session_factory))
+    if db is not None:
+        checks.append(await check_db(db))
 
     if redis_client:
         checks.append(await check_redis(redis_client))

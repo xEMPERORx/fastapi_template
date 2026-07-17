@@ -1,25 +1,14 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 import uuid
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.core.validation import SafeStr, StrongPassword
 
 
 class UserRegister(BaseModel):
-    username: str
+    username: SafeStr = Field(min_length=3, max_length=50)
     email: EmailStr
-    password: str
-
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, value):
-        if len(value) < 3:
-            raise ValueError("Username must be at least 3 characters long")
-        return value
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value):
-        if len(value) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        return value
+    password: StrongPassword
 
 
 class UserLogin(BaseModel):

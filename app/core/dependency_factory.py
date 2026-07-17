@@ -18,6 +18,7 @@ from app.services.auth.google_oauth import GoogleOAuthService
 from app.services.permission.service import PermissionService
 from app.services.roles.service import RoleService
 from app.services.search.service import SearchService
+from app.services.users.service import UserManagementService
 from app.services.verify.mail_verify import VerifyMail
 from app.services.verify.password_reset import PasswordReset
 from app.core.esclient import get_es_client
@@ -57,8 +58,9 @@ def get_search_service(
 
 def get_role_service(
     repo: Annotated[RoleRepository, Depends(get_role_repository)],
+    permission_repo: Annotated[PermissionRepository, Depends(get_permission_repository)],
 ) -> RoleService:
-    return RoleService(repo)
+    return RoleService(repo, permission_repo)
 
 
 def get_permission_service(
@@ -117,3 +119,11 @@ def get_google_oauth_service(
     token_repo: Annotated[RefreshTokenRepository, Depends(get_refresh_token_repository)],
 ) -> GoogleOAuthService:
     return GoogleOAuthService(user_repo, token_repo)
+
+
+def get_user_management_service(
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    role_repo: Annotated[RoleRepository, Depends(get_role_repository)],
+    permission_repo: Annotated[PermissionRepository, Depends(get_permission_repository)],
+) -> UserManagementService:
+    return UserManagementService(user_repo, role_repo, permission_repo)

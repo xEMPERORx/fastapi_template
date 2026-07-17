@@ -53,6 +53,15 @@ def safe_str(value: Any) -> str:
     return sanitize_text(strip_html(str(value)))
 
 
+_IDENTIFIER_STRIP_RE = re.compile(r"[^a-zA-Z0-9_.-]")
+
+
+def sanitize_identifier(value: str, max_len: int = 50) -> str:
+    """Reduce a value to a safe identifier (e.g. a username derived from an email)."""
+    cleaned = _IDENTIFIER_STRIP_RE.sub("", value)
+    return cleaned[:max_len] or "user"
+
+
 # ---------------------------------------------------------------------------
 # Pydantic reusable validators (can be used via AfterValidator or field_validator)
 # ---------------------------------------------------------------------------
@@ -99,6 +108,25 @@ def validate_length(min_len: int = 1, max_len: int = 1000):
     return _check
 
 
+_IDENTIFIER_RE = re.compile(r"^[a-zA-Z0-9_.:\-]+$")
+
+
+def validate_identifier(value: str) -> str:
+    """Strict allow-list for scoped identifiers like role/permission names
+    (e.g. "role:create"). Rejects invalid input rather than silently mangling
+    it — `sanitize_text`'s SQL-keyword stripping would otherwise eat
+    legitimate verb-scoped names ("permission:create" -> "permission:"),
+    since CREATE/UPDATE/DELETE are exactly the words this naming convention
+    uses. Silently corrupting a permission name is worse than rejecting it:
+    every authorization check against the intended name would then silently
+    fail to match.
+    """
+    value = value.strip()
+    if not _IDENTIFIER_RE.match(value):
+        raise ValueError("Must contain only letters, numbers, '.', '_', '-', or ':'")
+    return value
+
+
 # ---------------------------------------------------------------------------
 # Composite annotated types (drop-in in schema classes)
 # ---------------------------------------------------------------------------
@@ -106,6 +134,7 @@ def validate_length(min_len: int = 1, max_len: int = 1000):
 SafeStr = Annotated[str, AfterValidator(sanitize_text)]
 SafeEmail = Annotated[str, AfterValidator(validate_email), AfterValidator(sanitize_text)]
 StrongPassword = Annotated[str, AfterValidator(validate_strong_password)]
+SafeIdentifier = Annotated[str, AfterValidator(validate_identifier)]
 
 
 # ---------------------------------------------------------------------------

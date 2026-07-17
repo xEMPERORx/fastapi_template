@@ -1,3 +1,16 @@
+# ---- Frontend build stage: produces frontend/dist, served by app.frontend() ----
+FROM node:22-slim AS frontend-builder
+
+WORKDIR /frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
+
+# ---- Backend stage ----
 FROM python:3.11-slim-bookworm
 
 
@@ -17,6 +30,7 @@ RUN --mount=type=bind,source=uv.lock,target=uv.lock \
 
 
 COPY . .
+COPY --from=frontend-builder /frontend/dist ./frontend/dist
 
 
 RUN chmod +x /app/entrypoint.sh && \

@@ -24,10 +24,24 @@ _PATH_TRAVERSAL_RE = re.compile(r"\.\./|\.\.\\|%2e%2e%2f|%2e%2e/")
 
 
 def safe_filename(value: str, max_len: int = 255) -> str:
-    """Strip path-traversal and dangerous chars, return safe filename."""
+    """Strip path-traversal and dangerous chars, return safe filename.
+
+    Truncation preserves a short trailing extension (e.g. `.txt`) instead of
+    blindly cutting from the left, which would otherwise strip it off any
+    name longer than `max_len`.
+    """
     value = _PATH_TRAVERSAL_RE.sub("", value)
     # Keep only word chars, dots, dashes, underscores
-    value = re.sub(r"[^\w.\-]", "_", value)
+    value = re.sub(r"[^\w.\-]", "_", value).strip("._") or "file"
+
+    if len(value) <= max_len:
+        return value
+
+    stem, dot, ext = value.rpartition(".")
+    if dot and 0 < len(ext) <= 10:
+        truncated_stem = stem[: max_len - len(ext) - 1].strip("._") or "file"
+        return f"{truncated_stem}.{ext}"
+
     return value[:max_len].strip("._")
 
 

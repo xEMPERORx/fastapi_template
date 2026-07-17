@@ -28,9 +28,15 @@ def create_access_token(subject: dict, expires_delta: Optional[timedelta] = None
 
 @log_function
 def create_refresh_token(subject: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a refresh JWT token with an expiration time."""
+    """Create a refresh JWT token with an expiration time.
+
+    Includes a random `jti` so two logins for the same user within the same
+    second don't produce byte-identical tokens — `exp` has 1-second
+    resolution, and without a nonce a same-second double-login collides on
+    `refreshtoken.token`'s primary key.
+    """
     expires = datetime.utcnow() + (expires_delta or timedelta(days=7))
-    to_encode = {"exp": expires, "user": subject}
+    to_encode = {"exp": expires, "user": subject, "jti": uuid.uuid4().hex}
     return jwt.encode(to_encode, REFRESH_SECRET_KEY, ALGORITHM)
 
 

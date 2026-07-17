@@ -14,7 +14,7 @@ dependencies = [
     "celery>=5.6.2",
     "elasticsearch[async]>=9.3.0",
     "fastapi-mail>=1.6.2",
-    "fastapi[standard]>=0.135.2",
+    "fastapi[standard]>=0.138.0",
     "gevent>=25.9.1",
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
@@ -24,3 +24,13 @@ dependencies = [
     "redis>=7.3.0",
     "sqlalchemy>=2.0.48",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-timeout>=2.4.0",
+]
+
+[tool.pytest.ini_options]
+# Tests run without Redis/Elasticsearch/a Celery broker; a call that forgets a
+# connection timeout should fail a test, not hang the whole suite.
+addopts = "--timeout=30"

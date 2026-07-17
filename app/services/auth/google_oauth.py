@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from authlib.integrations.starlette_client import OAuth
 from fastapi import HTTPException, Request, status
 
+from app.core.validation import sanitize_identifier
 from app.repositories.auth.token import RefreshTokenRepository
 from app.repositories.auth.user import UserRepository
 from app.schema.auth import GoogleOAuthCallbackResponse, UserResponse
@@ -90,7 +91,7 @@ class GoogleOAuthService(LoggedService):
 		)
 
 	async def _build_unique_username(self, email: str) -> str:
-		base_username = email.split("@")[0]
+		base_username = sanitize_identifier(email.split("@")[0])
 		candidate = base_username
 		suffix = 1
 

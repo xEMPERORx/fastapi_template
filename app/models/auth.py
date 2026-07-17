@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 import uuid
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Table
@@ -27,4 +28,11 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     roles = relationship("Role", secondary="user_roles", back_populates="users")
+    permissions = relationship("Permission", secondary="user_permissions", back_populates="users")
+    created_by = relationship("User", remote_side=[id], backref="created_users")

@@ -2,6 +2,23 @@ import pytest
 from httpx import AsyncClient
 
 from app.main import app
+from tests.conftest import make_superuser, verify_user
+
+
+def _iter_api_routes(routes):
+    """Walk app.routes recursively.
+
+    Since FastAPI's router-internals refactor (0.137+), `include_router()`
+    no longer flattens/clones child routes into `app.routes` — it wraps each
+    included router in a `_IncludedRouter` holding the original `APIRouter`
+    (`.original_router`). The real `APIRoute` objects (with `.dependant`)
+    live at `.original_router.routes`, potentially nested further.
+    """
+    for route in routes:
+        if hasattr(route, "dependant"):
+            yield route
+        elif hasattr(route, "original_router"):
+            yield from _iter_api_routes(route.original_router.routes)
 
 
 @pytest.fixture(autouse=True)
@@ -12,13 +29,13 @@ def override_permission_dependencies():
     async def allow_permissions():
         return None
 
-    for route in app.routes:
-        dependant = getattr(route, "dependant", None)
-        if not dependant:
-            continue
+    bypassed_names = {"permission_checker", "role_checker", "checker"}
+
+    for route in _iter_api_routes(app.routes):
+        dependant = route.dependant
         for dependency in dependant.dependencies:
             call = getattr(dependency, "call", None)
-            if callable(call) and getattr(call, "__name__", "") == "permission_checker":
+            if callable(call) and getattr(call, "__name__", "") in bypassed_names:
                 app.dependency_overrides[call] = allow_permissions
 
     yield
@@ -27,12 +44,13 @@ def override_permission_dependencies():
     app.dependency_overrides.update(previous)
 
 
-async def register_and_get_user_id(ac: AsyncClient, username: str, email: str, password: str):
-    """Scenario: Register and get user id """
+async def register_and_login(ac: AsyncClient, username: str, email: str, password: str):
+    """Scenario: Register, log in, and return (user_id, access_token)."""
     await ac.post(
         "/api/v1/auth/register",
         json={"email": email, "username": username, "password": password},
     )
+    await verify_user(username)
 
     login = await ac.post(
         "/api/v1/auth/login",
@@ -41,7 +59,13 @@ async def register_and_get_user_id(ac: AsyncClient, username: str, email: str, p
     token = login.json()["access_token"]
 
     me = await ac.get("/api/v1/auth/user", headers={"Authorization": f"Bearer {token}"})
-    return me.json()["id"]
+    return me.json()["id"], token
+
+
+async def register_and_get_user_id(ac: AsyncClient, username: str, email: str, password: str):
+    """Scenario: Register and get user id """
+    user_id, _token = await register_and_login(ac, username, email, password)
+    return user_id
 
 
 @pytest.mark.asyncio
@@ -100,12 +124,34 @@ async def test_assign_role_to_user(ac: AsyncClient):
         ac,
         username="rbac-user",
         email="rbac@example.com",
-        password="password123",
+        password="Password123!",
     )
 
-    assign_response = await ac.get(f"/api/v1/role/{user_id}/assign/{role_id}")
+    admin_id, admin_token = await register_and_login(
+        ac,
+        username="rbac-admin",
+        email="rbac-admin@example.com",
+        password="Password123!",
+    )
+    # The permission_checker/role_checker override fixture only bypasses the
+    # route-level dependency; UserManagementService.assign_role re-checks
+    # grant-delegation at the service layer regardless (defense in depth),
+    # so the acting user still needs a real is_superuser bypass here.
+    await make_superuser("rbac-admin")
 
-    assert assign_response.status_code == 200
+    assign_response = await ac.post(
+        f"/api/v1/users/{user_id}/roles/{role_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert assign_response.status_code == 204
+
+    detail_response = await ac.get(
+        f"/api/v1/users/{user_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert detail_response.status_code == 200
+    assert "operator" in detail_response.json()["roles"]
 
 
 @pytest.mark.asyncio

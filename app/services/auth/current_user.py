@@ -19,7 +19,7 @@ async def get_current_user(
         raise InvalidToken()
 
     user_repo = UserRepository(db)
-    user = await user_repo.get_by_id(user_id)
+    user = await user_repo.get_by_id_with_grants(user_id)
     if user is None:
         raise UserNotFound(user_id)
     return user

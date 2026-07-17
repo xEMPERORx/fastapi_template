@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.v1.routes import auth, google_oauth, health, permission, roles, search
+from app.api.v1.routes import auth, google_oauth, health, permission, roles, search, users
 from app.core.esclient import INDEX_CONFIG, close_es_client, es_client
 from app.core.logger import logger
 from app.error.register_error import register_exception
@@ -64,5 +65,19 @@ app.include_router(auth.router, prefix="/api/v1/auth")
 app.include_router(google_oauth.router, prefix="/api/v1/auth")
 app.include_router(roles.router, prefix="/api/v1/role")
 app.include_router(permission.router, prefix="/api/v1/permission")
+app.include_router(users.router, prefix="/api/v1/users")
 app.include_router(search.router, prefix="/api/v1/search")
 app.include_router(health.router, prefix="/api/v1")
+
+# Serve the built admin SPA (frontend/) from the same process — no separate
+# frontend server. API routes above always win; this only ever handles a
+# request FastAPI didn't already have a route for. Skipped entirely if
+# `npm run build` hasn't been run yet, so pure-backend dev never breaks.
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if FRONTEND_DIST.is_dir():
+    app.frontend("/", directory=FRONTEND_DIST)
+else:
+    logger.info(
+        "frontend/dist not found, skipping SPA mount "
+        "(run `npm run build` in frontend/ to serve the admin UI from this process)"
+    )

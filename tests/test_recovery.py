@@ -10,6 +10,8 @@ from app.core.recovery import (
     CircuitOpenError,
 )
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestRetry:
     async def test_retry_succeeds_first_attempt(self):
