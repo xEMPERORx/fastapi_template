@@ -2,7 +2,7 @@
 
 import asyncio
 import pytest
-from app.core.recovery import (
+from app.core.resilience.recovery import (
     async_retry,
     RetryConfig,
     CircuitBreaker,

@@ -23,7 +23,7 @@ def send_email_bg(recipients: list[str], subject: str, body: str):
 @app.task(name="cleanup_expired_tokens")
 def cleanup_expired_tokens():
     """Periodic housekeeping: refresh tokens accumulate forever otherwise."""
-    from app.database.db import engine
+    from app.database.postgres_db import engine
     from app.models.db_model import RefreshToken
 
     async def _cleanup() -> int:

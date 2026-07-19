@@ -1,7 +1,7 @@
 [project]
 name = "fastapi-starter-template"
 version = "0.1.0"
-description = "Production-ready FastAPI starter with JWT, Google OAuth, RBAC, Redis, Celery, and Elasticsearch"
+description = "Production-ready FastAPI starter with JWT, Google OAuth, RBAC, Redis, and Celery"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -12,7 +12,6 @@ dependencies = [
     "authlib>=1.6.9",
     "bcrypt>=5.0.0",
     "celery>=5.6.2",
-    "elasticsearch[async]>=9.3.0",
     "fastapi-mail>=1.6.2",
     "fastapi[standard]>=0.138.0",
     "gevent>=25.9.1",
@@ -31,6 +30,6 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-# Tests run without Redis/Elasticsearch/a Celery broker; a call that forgets a
+# Tests run without Redis/a Celery broker; a call that forgets a
 # connection timeout should fail a test, not hang the whole suite.
 addopts = "--timeout=30"

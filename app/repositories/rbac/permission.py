@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logger import LoggedRepository
 from app.models.db_model import Permission
-from app.schema.permission import PermissionCreate
 
 
 class PermissionRepository(LoggedRepository):
@@ -16,29 +15,27 @@ class PermissionRepository(LoggedRepository):
     async def get_by_name(self, name: str) -> Permission | None:
         return await self.db.scalar(select(Permission).where(Permission.name == name))
 
-    async def get_by_ids(self, permission_ids: list[int]) -> list[Permission]:
-        if not permission_ids:
+    async def get_by_names(self, names: list[str]) -> list[Permission]:
+        if not names:
             return []
-        result = await self.db.scalars(select(Permission).where(Permission.id.in_(permission_ids)))
+        result = await self.db.scalars(select(Permission).where(Permission.name.in_(names)))
         return result.all()
 
-    async def create(self, permission: PermissionCreate) -> Permission:
-        db_permission = Permission(name=permission.name)
+    async def get_by_bit_position(self, bit_position: int) -> Permission | None:
+        return await self.db.scalar(select(Permission).where(Permission.bit_position == bit_position))
+
+    async def create_with_bit(self, name: str, bit_position: int) -> Permission:
+        db_permission = Permission(name=name, bit_position=bit_position)
         self.db.add(db_permission)
         await self.db.commit()
         await self.db.refresh(db_permission)
         return db_permission
 
-    async def update(self, permission: Permission, update_data: dict) -> Permission:
-        for key, value in update_data.items():
-            setattr(permission, key, value)
-        await self.db.commit()
-        await self.db.refresh(permission)
-        return permission
-
-    async def delete(self, permission: Permission) -> None:
-        await self.db.delete(permission)
-        await self.db.commit()
+    async def get_by_ids(self, permission_ids: list[int]) -> list[Permission]:
+        if not permission_ids:
+            return []
+        result = await self.db.scalars(select(Permission).where(Permission.id.in_(permission_ids)))
+        return result.all()
 
     async def list_all(self, skip: int, limit: int) -> list[Permission]:
         result = await self.db.scalars(select(Permission).offset(skip).limit(limit))

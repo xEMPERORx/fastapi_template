@@ -18,23 +18,25 @@ makes; the general checklist catches everything else.
 - [ ] No business logic in routes (only param extraction + service call + return)
 - [ ] No DB access in services (only through repository)
 - [ ] No `db.commit()` outside repository layer
-- [ ] New dependencies wired in `app/core/dependency_factory.py`, routes use `Annotated[Type, Depends(factory)]`
+- [ ] New dependencies wired in `app/core/dependency_factory/<domain>.py`, routes use `Annotated[Type, Depends(factory)]`
 - [ ] No circular imports — factories isolate wiring
 
 ## Project Security Review
 
-- [ ] Input validated via Pydantic schemas (not raw dicts); free-text fields use `SafeStr`/`SafeEmail`/`StrongPassword` from `app/core/validation`. Structured identifiers matched verbatim later (role/permission names, slugs) use `SafeIdentifier` (allow-list) instead of `SafeStr` — `sanitize_text`'s SQL-keyword stripping silently corrupts verb-scoped names like `"permission:create"` → `"permission:"`. Free-text query params (e.g. search) are run through `sanitize_text` before reaching an external query (ES, etc.) — fine there since the result isn't matched verbatim afterward.
-- [ ] Auth routes use `Depends(get_current_user)`, `role_required`/`permission_required`, or — for endpoints that assign a role/permission to a user — `grant_role_required()`/`grant_permission_required()` (data-dependent, not a fixed permission string)
+- [ ] Input validated via Pydantic schemas (not raw dicts); free-text fields use `SafeStr`/`SafeEmail`/`StrongPassword` from `app/core/security/validation`. Structured identifiers matched verbatim later (role/permission names, slugs) use `SafeIdentifier` (allow-list) instead of `SafeStr` — `sanitize_text`'s SQL-keyword stripping silently corrupts verb-scoped names like `"permission:create"` → `"permission:"`.
+- [ ] Auth routes use `Depends(get_current_user)`, `role_required`/`permission_required`, or — for endpoints that assign a role/permission to a user — `grant_role_required()`/`grant_permission_required()` (data-dependent, not a fixed permission string); tenant-boundary operations (creating a tenant, anything that must never be reachable via a catalog permission) use `superuser_required()` instead
 - [ ] Nothing outside `app/cli/seed.py` / direct DB access can set `User.is_superuser` — it must never appear in a request schema
-- [ ] No secrets logged (passwords, tokens, keys) — `_redact_value` in `app/core/logger.py` handles known field names, verify new sensitive fields actually contain "password"/"token"/"secret"/"key"
+- [ ] `permission_required("resource:action")` strings exist in `app.core.rbac.registry.PERMISSION_REGISTRY` — a name not in the registry raises `KeyError` at import time (fails loudly, but confirm it's intentional and the registry was actually updated, not a typo)
+- [ ] Role-mutating service methods (`update_role`, `delete_role`, `add_permission_to_role`, grantable-config methods) take an `actor: User` and call `RoleService._ensure_role_in_scope` — a non-superuser must not be able to touch a role outside their own tenant
+- [ ] No secrets logged (passwords, tokens, keys) — `_redact_value` in `app/core/logger/emit.py` handles known field names, verify new sensitive fields actually contain "password"/"token"/"secret"/"key"
 - [ ] No raw SQL string concatenation — always use SQLAlchemy parameterized queries, and `text(...)` for raw SQL strings (not a bare string — SQLAlchemy 2.x async rejects those)
-- [ ] File paths use `safe_filename()` from `app/core/data_validation`
+- [ ] File paths use `safe_filename()` from `app/core/security/data_validation`
 - [ ] Response schemas exclude password hashes and internal fields
 
 ## Error Handling Review
 
-- [ ] Services raise custom `AppException` subclasses from `app/error/custom_exception.py`, never raw `HTTPException`, never return `None`/error dicts
-- [ ] New exceptions registered in `app/error/register_error.py`
+- [ ] Services raise custom `AppException` subclasses from the relevant `app/error/<domain>.py`, never raw `HTTPException`, never return `None`/error dicts
+- [ ] New exceptions registered in `app/error/register.py`
 - [ ] Repository does NOT catch exceptions (let them bubble to service)
 - [ ] Route does NOT have try/except — let the global handler catch everything
 
@@ -60,11 +62,30 @@ makes; the general checklist catches everything else.
 - [ ] Fire-and-forget Celery tasks set `task_ignore_result=True` (or don't need it set
       globally) — without it, `.delay()` sets up a result-tracking subscription even
       though nothing calls `.get()`.
-- [ ] `CircuitBreaker` instances are module-level singletons (see
-      `app/core/circuit_breakers.py`), never instantiated per-call — a fresh instance
-      never accumulates failures and never trips.
-- [ ] External calls wrapped with `async_retry`/`CircuitBreaker` use `app.core.recovery`,
-      not ad hoc retry loops.
+- [ ] `CircuitBreaker` instances (from `app.core.resilience.recovery`) are module-level
+      singletons, never instantiated per-call — a fresh instance never accumulates
+      failures and never trips.
+- [ ] External calls wrapped with `async_retry`/`CircuitBreaker` use
+      `app.core.resilience.recovery`, not ad hoc retry loops.
+
+## RBAC & Multi-Tenancy Review
+
+- [ ] Any mutation that changes what a user is allowed to do (role permission set,
+      role membership, direct permission grant) goes through a repository method that
+      bumps `User.perm_version` and calls `app.core.authz_cache.publish_events` —
+      otherwise an already-issued access token's mask silently stays valid past the
+      change instead of being detected as stale.
+- [ ] User/tenant deactivation goes through `UserRepository.set_active` /
+      `TenantRepository.set_active` (publishes a `user_status`/`tenant_status` event),
+      not a raw `is_active` field assignment — a raw assignment doesn't reach the
+      authz cache, so an already-issued token keeps working until it naturally expires.
+- [ ] A new `Permission` row is never created outside `app/cli/sync_permissions.py`
+      mirroring the registry — there's no create endpoint (see `app/api/v1/routes
+      /rbac/permission.py`'s comment) because a row without a `bit_position` can never
+      be OR'd into any mask.
+- [ ] `RoleService.create_role`'s subset-mask check (`requested_mask & ~allowed_mask`)
+      isn't bypassed by constructing a `Role`/permissions directly in a new code path —
+      any new way to create a role must go through this same actor-bounded check.
 
 ## Testing Review
 
@@ -72,7 +93,7 @@ makes; the general checklist catches everything else.
 - [ ] Covers: success case, missing fields, invalid input, auth/protected (401),
       forbidden (403 — including grant-delegation denial for hierarchy endpoints),
       not-found (404), duplicate/conflict (400)
-- [ ] No real external services called — Redis/ES/Celery are either mocked or expected
+- [ ] No real external services called — Redis/Celery are either mocked or expected
       to fail open/fast in the test environment (they aren't running in CI/sandbox)
 
 ## General Review Checklist

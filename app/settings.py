@@ -22,7 +22,6 @@ class Settings(BaseSettings):
     REDIS_HOST :str
     REDIS_PORT:int
     REDIS_URL :str
-    ELASTICSEARCH_URL:str
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
     GOOGLE_REDIRECT_URI: str

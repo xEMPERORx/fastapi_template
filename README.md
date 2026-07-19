@@ -1,16 +1,15 @@
 # FastAPI Template
 
-Production-oriented FastAPI starter built around async Python, clear service boundaries, and external infrastructure for real-world apps. Strong base for projects needing authentication, role-based access control, email verification, password reset, search, background jobs, database migrations, structured logging, health checks, input validation, and fault tolerance.
+Production-oriented FastAPI starter built around async Python, clear service boundaries, and external infrastructure for real-world apps. Strong base for projects needing authentication, role-based access control, email verification, password reset, background jobs, database migrations, structured logging, health checks, input validation, and fault tolerance.
 
 ## What is included
 
 - FastAPI app with versioned API routes
 - Async SQLAlchemy database layer with Alembic migrations
 - JWT dual-token authentication (access + refresh)
-- Email verification and password reset
+- Email verification and password reset (self-expiring signed tokens, no server-side token storage)
 - Google OAuth login flow
-- Role and permission based access control (RBAC)
-- Elasticsearch-backed search
+- Hierarchical role and permission based access control (RBAC)
 - Redis-backed Celery worker with background tasks
 - **Structured logging** — request ID tracking, layer-aware decorators, JSON + console output
 - **Input validation & sanitization** — XSS/SQL injection protection, reusable Pydantic types
@@ -18,7 +17,7 @@ Production-oriented FastAPI starter built around async Python, clear service bou
 - **Fault tolerance** — retry with exponential backoff + jitter, circuit breaker pattern
 - **Health checks** — Kubernetes-style liveness/readiness probes with per-service status
 - **Security middleware** — CSP, HSTS, X-Frame-Options, and more on every response
-- **Rate limiting** — fixed-window limiter with standard rate-limit headers
+- **Rate limiting** — Redis-backed sliding-window limiter with standard rate-limit headers
 - **Centralized error handling** — typed exceptions with JSON error responses
 - Async test suite with pytest and httpx
 
@@ -29,7 +28,6 @@ Production-oriented FastAPI starter built around async Python, clear service bou
 - SQLAlchemy 2.x (async)
 - PostgreSQL
 - Redis
-- Elasticsearch
 - Celery
 - Alembic
 - pytest / pytest-asyncio / httpx
@@ -43,27 +41,28 @@ middleware -> route -> service -> repository -> db/external service -> response
 ```
 
 - `app/main.py` — FastAPI application composition root
-- `app/api/v1/routes/` — HTTP route handlers (auth, roles, permissions, search, health, OAuth)
-- `app/core/` — shared utilities:
-  - `dependency_factory.py` — DI wiring (repositories → services)
+- `app/api/v1/routes/` — HTTP route handlers, grouped by domain: `auth/` (`account.py`, `google_oauth.py`), `rbac/` (`permission.py`, `roles.py`), plus flat `users.py`/`health.py` for single-file domains
+- `app/core/` — shared utilities, grouped by concern:
+  - `dependency_factory/` — DI wiring (repositories → services), split by domain: `auth.py`, `rbac.py`, `users.py`, all re-exported from `__init__.py`
   - `dependencies.py` — RBAC helpers (`role_required`, `permission_required`)
-  - `validation.py` — XSS/SQL injection sanitization, Pydantic validators, pagination
-  - `data_validation.py` — path traversal prevention, model/dict validation
-  - `recovery.py` — retry with backoff, circuit breaker
-  - `health.py` — DB/Redis/ES health checks with aggregated reporting
-  - `logger.py` — structured logging with request ID, layer-aware decorators
-  - `fixed_window_ratelimit.py` — in-memory rate limiter
-  - `esclient.py` — Elasticsearch client and index config
-- `app/database/` — async database session and Redis setup
-- `app/error/` — custom exceptions, validation errors, centralized handler registration
+  - `rbac.py` — effective-permission computation, grant-delegation checks
+  - `logger/` — structured logging with request ID, layer-aware decorators, split into `context.py`, `formatters.py`, `setup.py`, `emit.py`, `decorators.py`, re-exported from `__init__.py`
+  - `health.py` — DB/Redis health checks with aggregated reporting
+  - `security/` — `validation.py` (XSS/SQL injection sanitization, Pydantic validators, pagination), `data_validation.py` (path traversal prevention, model/dict validation)
+  - `resilience/` — `recovery.py` (retry with backoff, circuit breaker)
+  - `ratelimit/` — `sliding_window.py` (Redis sorted-set algorithm), `limiters.py` (shared `limiter`/`login_limiter` instances)
+- `app/database/` — `postgres_db.py` (async engine/session) and `redis_db.py` (Redis client factory) — named to match each other
+- `app/error/` — exceptions split by domain: `base.py` (base class + handler factories), `auth.py`, `rbac.py`, `ratelimit.py`, `validation.py`, plus `register.py` (registers every handler with the app)
 - `app/middleware/` — request logging, rate limiting, and security headers
-- `app/models/` — SQLAlchemy models (auth, RBAC)
-- `app/repositories/` — persistence layer (user, role, permission, token, search)
-- `app/schema/` — Pydantic request/response models
-- `app/services/` — business logic (auth, RBAC, search, OAuth, mail)
+- `app/models/` — SQLAlchemy models, one file per domain (`auth.py`, `rbac.py`), exported through `db_model.py`
+- `app/repositories/` — persistence layer, grouped by domain (`auth/`, `rbac/`)
+- `app/schema/` — Pydantic request/response models, grouped by domain (`rbac/`, plus flat files for single-schema domains)
+- `app/services/` — business logic, grouped by domain (`auth/` — shared primitives at the top, the six login/logout/register/refresh/reset-password/Google-OAuth flows under `auth/actions/` — `rbac/`, `users/`, `verify/`)
 - `app/queue/` — Celery app and task entry points
 - `migrations/` — Alembic migration scripts
 - `tests/` — automated tests
+
+See the `project-structure` Claude Code skill (`.claude/skills/project-structure/`) for the full rationale on what goes where when adding a new module.
 
 ## Available API Areas
 
@@ -73,7 +72,6 @@ middleware -> route -> service -> repository -> db/external service -> response
 | Google OAuth | `/api/v1/auth` | Authorization redirect and callback |
 | Roles | `/api/v1/role` | CRUD, assign users, manage role permissions |
 | Permissions | `/api/v1/permission` | CRUD, list |
-| Search | `/api/v1/search` | Elasticsearch-backed query endpoint |
 | Health | `/api/v1` | Aggregated health, liveness probe, readiness probe |
 
 Use `app/main.py` as the single place to wire new routers into the application.
@@ -94,7 +92,6 @@ Key variables:
 |----------|---------|
 | `DB_URL` | PostgreSQL connection string |
 | `REDIS_URL` | Redis connection string |
-| `ELASTICSEARCH_URL` | Elasticsearch URL |
 | `SECRET_KEY` / `REFRESH_KEY` | JWT signing keys |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime (default 30) |
 | `REFRESH_TOKEN_EXPIRE` | Refresh token lifetime in days (default 7) |
@@ -150,8 +147,6 @@ The included `docker-compose.yml` starts the full stack:
 - API service
 - PostgreSQL
 - Redis
-- Elasticsearch
-- Kibana
 - Celery worker
 
 ```bash
@@ -164,8 +159,6 @@ Service ports:
 |---------|-----------|----------------|
 | API | `8000` | `8000` |
 | PostgreSQL | `5433` | `5432` |
-| Elasticsearch | `9200` | `9200` |
-| Kibana | `5601` | `5601` |
 
 The container entrypoint runs `alembic upgrade head` before starting the app.
 
@@ -189,7 +182,7 @@ The test setup uses an isolated SQLite database, overrides the app database depe
 
 ### Structured Logging
 
-All logging goes through `app/core/logger.py`. A unique request ID is generated per request and attached to every log line via `ContextVar`, so you can trace a request across routes, services, and repositories.
+All logging goes through `app/core/logger/` (split into `context.py`, `formatters.py`, `setup.py`, `emit.py`, `decorators.py` — all re-exported from the package `__init__.py`, so `from app.core.logger import ...` is unchanged regardless of which submodule something actually lives in). A unique request ID is generated per request and attached to every log line via `ContextVar`, so you can trace a request across routes, services, and repositories.
 
 **Log output:**
 - **Console** — human-readable with request/section separators
@@ -226,12 +219,12 @@ log_error("PaymentError", "Charge failed", error_location="stripe.charge", exc_i
 
 ### Input Validation & Sanitization
 
-`app/core/validation.py` provides XSS and SQL injection protection you can drop into any Pydantic schema:
+`app/core/security/validation.py` provides XSS and SQL injection protection you can drop into any Pydantic schema:
 
 **Annotated types (use in schemas):**
 
 ```python
-from app.core.validation import SafeStr, SafeEmail, StrongPassword
+from app.core.security.validation import SafeStr, SafeEmail, StrongPassword
 
 class UserRegister(BaseModel):
     username: SafeStr          # strips XSS + SQL injection
@@ -242,7 +235,7 @@ class UserRegister(BaseModel):
 **Standalone functions:**
 
 ```python
-from app.core.validation import sanitize_text, strip_html, safe_str
+from app.core.security.validation import sanitize_text, strip_html, safe_str
 
 sanitize_text("<script>alert(1)</script>")  # removes XSS
 strip_html("<b>hello</b>")                  # HTML-encodes
@@ -252,7 +245,7 @@ safe_str(user_input)                         # full pipeline
 **Pagination dependencies:**
 
 ```python
-from app.core.validation import PaginationParams, StrictPaginationParams, pagination_dependency
+from app.core.security.validation import PaginationParams, StrictPaginationParams, pagination_dependency
 
 @router.get("/items")
 async def list_items(pagination: PaginationParams = Depends(pagination_dependency)):
@@ -261,10 +254,10 @@ async def list_items(pagination: PaginationParams = Depends(pagination_dependenc
 
 ### Data Validation
 
-`app/core/data_validation.py` protects against path traversal and validates data integrity:
+`app/core/security/data_validation.py` protects against path traversal and validates data integrity:
 
 ```python
-from app.core.data_validation import safe_filename, validate_model_fields, validate_required_fields, sanitize_dict
+from app.core.security.data_validation import safe_filename, validate_model_fields, validate_required_fields, sanitize_dict
 
 safe_filename("../../../etc/passwd")          # → "_____etc_passwd"
 validate_required_fields(data, ["name", "email"])
@@ -274,12 +267,12 @@ clean = sanitize_dict(user_input)             # truncates overlong strings
 
 ### Fault Tolerance
 
-`app/core/recovery.py` provides two patterns for resilient external service calls:
+`app/core/resilience/recovery.py` provides two patterns for resilient external service calls:
 
 **Retry with exponential backoff:**
 
 ```python
-from app.core.recovery import async_retry, RetryConfig
+from app.core.resilience.recovery import async_retry, RetryConfig
 
 config = RetryConfig(max_retries=3, base_delay=0.5, max_delay=30.0, jitter=True)
 result = await async_retry(external_api_call, arg1, arg2, config=config)
@@ -288,7 +281,7 @@ result = await async_retry(external_api_call, arg1, arg2, config=config)
 **Circuit breaker:**
 
 ```python
-from app.core.recovery import CircuitBreaker, CircuitBreakerConfig, CircuitOpenError
+from app.core.resilience.recovery import CircuitBreaker, CircuitBreakerConfig, CircuitOpenError
 
 cb = CircuitBreaker("payment-service", CircuitBreakerConfig(
     failure_threshold=5,
@@ -311,7 +304,7 @@ Three endpoints for orchestration and monitoring:
 |----------|---------|----------|
 | `GET /api/v1/health` | Aggregated status | Returns `healthy` / `degraded` / `unhealthy` with per-service details |
 | `GET /api/v1/health/live` | Liveness probe | Always 200 if the app process is running |
-| `GET /api/v1/health/ready` | Readiness probe | 200 only if DB and ES are reachable; 503 if unhealthy |
+| `GET /api/v1/health/ready` | Readiness probe | 200 only if DB and Redis are reachable; 503 if unhealthy |
 
 Response format:
 
@@ -320,7 +313,7 @@ Response format:
   "status": "healthy",
   "checks": [
     {"service": "database", "healthy": true, "latency_ms": 2.3, "detail": "OK"},
-    {"service": "elasticsearch", "healthy": true, "latency_ms": 5.1, "detail": "OK"}
+    {"service": "redis", "healthy": true, "latency_ms": 1.1, "detail": "OK"}
   ],
   "timestamp": "2026-05-09T12:00:00Z"
 }
@@ -342,10 +335,12 @@ Registered automatically — no manual configuration needed. Headers added to ev
 
 ### Rate Limiting
 
-Fixed-window limiter (10 requests per 60 seconds per IP by default). Configure in `app/middleware/ratelimiting_middleware.py`:
+Redis-backed sliding-window-log limiter (10 requests per 60 seconds per IP by default) — accurate across multiple workers/replicas and doesn't burst at window boundaries. Instances live in `app/core/ratelimit/limiters.py`:
 
 ```python
-limiter = FixedWindowLimiter(requests=10, window_seconds=60)
+from app.core.ratelimit.sliding_window import RedisSlidingWindowLimiter
+
+limiter = RedisSlidingWindowLimiter(requests=10, window_seconds=60, redis_client_factory=redis_connect)
 ```
 
 Headers on all responses:
@@ -355,7 +350,7 @@ Headers on all responses:
 
 ### Error Handling
 
-Custom exceptions in `app/error/custom_exception.py` all extend `AppException` and return structured JSON:
+Custom exceptions all extend `AppException` (`app/error/base.py`) and return structured JSON. They're split by domain — `app/error/auth.py`, `app/error/rbac.py`, `app/error/ratelimit.py`:
 
 ```json
 {
@@ -376,8 +371,8 @@ Built-in exception types:
 - `Exception` → 500 (global catch-all)
 
 To add a new exception:
-1. Define it in `custom_exception.py` (or `validation_exception.py` for validation errors)
-2. Register it in `register_error.py` with `create_exception_handler(status_code)`
+1. Define it in the domain file it belongs to under `app/error/` (or `validation.py` for validation errors)
+2. Register it in `register.py` with `create_exception_handler(status_code)`
 3. Raise it from a service
 
 ### RBAC Authorization
@@ -411,7 +406,7 @@ Dual-token JWT system:
 3. Add a service in `app/services/` (inherit from `LoggedService`)
 4. Add request/response schemas in `app/schema/`
 5. Add a route module in `app/api/v1/routes/`
-6. Wire repository and service factories in `app/core/dependency_factory.py`
+6. Wire repository and service factories in `app/core/dependency_factory/` (add a new module for a new domain, or extend an existing one)
 7. Register the router in `app/main.py`
 8. Add tests under `tests/`
 
@@ -421,4 +416,3 @@ Dual-token JWT system:
 - Keep all secrets out of version control — `.env` only
 - Rotate `SECRET_KEY` and `REFRESH_KEY` for production deployments
 - Review rate limit defaults before production use
-- The Elasticsearch index is created on startup if it doesn't exist

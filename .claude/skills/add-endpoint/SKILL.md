@@ -74,7 +74,7 @@ async def get_user_detail(self, user_id: int) -> UserDetailResponse:
 
 ### 4. Dependency wiring
 
-In `app/core/dependency_factory.py` (if not already wired):
+In `app/core/dependency_factory/<domain>.py` (if not already wired):
 ```python
 def get_user_detail_service(
     user_repo: UserRepository = Depends(get_user_repository),
@@ -104,7 +104,9 @@ async def get_user(
 - Use `model_config = {"from_attributes": True}` on response schemas (not create schemas)
 - Raise custom exceptions from services, never return error tuples
 - Auth endpoints: add `current_user = Depends(get_current_user)`, `Depends(role_required([...]))`, or `Depends(permission_required("x:y"))`
-- Endpoints that grant a role/permission to a user (path params `role_id`/`permission_id`) use `Depends(grant_role_required())` / `Depends(grant_permission_required())` instead — the allowed set is per-actor and data-dependent (see `app/core/rbac.py`), not a fixed permission string
+- `permission_required("x:y")` requires `"x:y"` to already be a key in `app.core.rbac.registry.PERMISSION_REGISTRY` — it does the lookup at route-decoration time (import time), so a typo or a not-yet-added permission fails immediately on startup, not on some later request. Add the permission to the registry (append-only — see the registry's own docstring) before wiring a route to it.
+- `permission_required` runs on a zero-DB-query fast path (`get_current_principal`, a JWT-mask bit test against the authz cache) — if your endpoint also needs the real `User` object (e.g. to read `.roles` or other fields), add a separate `current_user: Annotated[User, Depends(get_current_user)]` parameter; don't assume the dependency-list entry gives you a `User` back.
+- Endpoints that grant a role/permission to a user (path params `role_id`/`permission_id`) use `Depends(grant_role_required())` / `Depends(grant_permission_required())` instead — the allowed set is per-actor and data-dependent (see `app/core/rbac/delegation.py`), not a fixed permission string. These stay DB-backed (`get_current_user`), not the fast path, since roles are open-ended/tenant-authored and can't be reduced to a fixed bit position the way permissions can.
 
 ## What NOT To Do
 

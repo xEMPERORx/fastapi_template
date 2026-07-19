@@ -1,4 +1,4 @@
-from app.error.custom_exception import UserNotFound
+from app.error.auth import UserNotFound
 from app.services.verify.utils import decode_url_safe_token
 from fastapi.responses import JSONResponse
 from fastapi import status

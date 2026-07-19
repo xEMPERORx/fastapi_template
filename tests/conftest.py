@@ -16,7 +16,6 @@ os.environ.setdefault("DOMAIN", "http://test")
 os.environ.setdefault("REDIS_HOST", "localhost")
 os.environ.setdefault("REDIS_PORT", "6379")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-os.environ.setdefault("ELASTICSEARCH_URL", "http://localhost:9200")
 os.environ.setdefault("SESSION_SECRET", "test-session-secret")
 os.environ.setdefault("CORS_ORIGINS", '["http://localhost:3000"]')
 os.environ.setdefault("GOOGLE_CLIENT_ID", "")
@@ -30,14 +29,19 @@ os.environ.setdefault("GOOGLE_TOKEN_URI", "https://oauth2.googleapis.com/token")
 os.environ.setdefault("GOOGLE_USERINFO_URI", "https://openidconnect.googleapis.com/v1/userinfo")
 os.environ.setdefault("beat_dburi", "postgresql://postgres:postgres@localhost:5432/app_db")
 
+from unittest.mock import AsyncMock
+
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from app.main import app
-from app.database.db import Base, get_db
+from app.database.postgres_db import Base, get_db
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from app.models import db_model  # noqa: F401  (registers all models on Base.metadata)
-from app.core.rate_limiters import limiter, login_limiter
+from app.core.ratelimit.limiters import limiter, login_limiter
+from app.services.verify import mail_config
+from app.queue.task import send_email_bg
 
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -77,6 +81,15 @@ async def setup_db():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Mirrors the real app's startup `sync_permissions` call (see `app/main.py`'s
+    # lifespan) — ASGITransport doesn't run FastAPI lifespan events, so tests
+    # need this done explicitly to get realistic `Permission.bit_position`
+    # rows for any test that exercises the mask-based role-creation hierarchy.
+    from app.cli import sync_permissions
+    async with TestingSessionLocal() as session:
+        await sync_permissions.sync(session)
+
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -111,14 +124,23 @@ async def verify_user(username: str) -> None:
             await session.commit()
 
 
-async def make_superuser(username: str) -> None:
-    """Promote a user to superuser directly in the DB.
+async def make_superuser(ac, username: str, password: str = "Password123!") -> str:
+    """Promote a user to superuser directly in the DB, then log back in and
+    return a fresh access token.
 
     Simulates what app/cli/seed.py does — no API path can do this,
     `is_superuser` is intentionally absent from every request schema.
     Needed for tests exercising endpoints that re-check authorization at the
     service layer (defense in depth), which a route-dependency override can't
     bypass on its own — see UserManagementService.assign_role.
+
+    The re-login is required, not optional: `is_superuser` is now a claim
+    baked into the access token at mint time (see `TokenPayload`), read by
+    `permission_required`'s fast path (`get_current_principal`) without a
+    DB query. A token minted before this promotion still carries
+    `is_superuser=False` and stays that way until a fresh token is minted —
+    exactly the staleness a real deployment would also see, not a test
+    artifact to work around any other way.
     """
     from sqlalchemy import select
     from app.models.db_model import User
@@ -128,6 +150,26 @@ async def make_superuser(username: str) -> None:
         if user:
             user.is_superuser = True
             await session.commit()
+
+    login = await ac.post("/api/v1/auth/login", data={"username": username, "password": password})
+    return login.json()["access_token"]
+
+@pytest.fixture(autouse=True)
+def _no_real_mail(monkeypatch):
+    """Registration/password-reset send mail via a `BackgroundTasks` that
+    `ASGITransport` runs inline before the test's `await ac.post(...)`
+    returns — so without this, every test touching those endpoints depends
+    on real infrastructure being reachable: `RegisterUser.send_mail` calls
+    `send_email_bg.delay(...)` (a Celery task — publishing to the broker via
+    Celery's sync producer, which unlike `app.database.redis_db.redis_connect`
+    has no connect timeout and blocks for a long time when Redis is down),
+    and `ResetPassword.send_mail` calls `mail_config.mail.send_message`
+    directly. Both are mocked so tests match the stated "no Redis/Celery
+    broker required" test philosophy instead of silently depending on it.
+    """
+    monkeypatch.setattr(mail_config.mail, "send_message", AsyncMock(return_value=None))
+    monkeypatch.setattr(send_email_bg, "delay", lambda *args, **kwargs: None)
+
 
 @pytest_asyncio.fixture(scope="function")
 async def ac():

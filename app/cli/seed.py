@@ -23,7 +23,7 @@ import os
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.database.db import engine
+from app.database.postgres_db import engine
 from app.repositories.auth.user import UserRepository
 from app.services.auth.password import get_password_hash
 

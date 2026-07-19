@@ -1,16 +1,11 @@
-from app.error.custom_exception import UserNotFound
+from app.error.auth import UserNotFound
 from app.schema.auth import UserNewPassword
 from app.services.auth.password import get_password_hash
-from app.services.verify.utils import decode_url_safe_token
+from app.services.verify.utils import decode_password_reset_token
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException, status
-from app.core.circuit_breakers import redis_breaker
-from app.core.recovery import RetryConfig, async_retry
-from app.database.redis_db import redis_connect
 from app.repositories.auth.user import UserRepository
 from app.core.logger import LoggedService
-
-redis = redis_connect()
 
 
 class PasswordReset(LoggedService):
@@ -19,16 +14,7 @@ class PasswordReset(LoggedService):
          self.user_repo = user_repo
 
     async def verify_password(self,token:str,user_data:UserNewPassword):
-        async def _get_stored_email():
-            return await redis.get(f"reset_token:{token}")
-
-        stored_email = await redis_breaker.call(
-            async_retry, _get_stored_email, config=RetryConfig(max_retries=2, base_delay=0.2)
-        )
-        if not stored_email:
-            raise HTTPException(status_code=400, detail="Link expired or already used")
-
-        token_data = decode_url_safe_token(token)
+        token_data = decode_password_reset_token(token)
         user_email = token_data.get("email")
 
         if user_email:
@@ -45,10 +31,6 @@ class PasswordReset(LoggedService):
 
             await self.user_repo.set_password(user, hashed_password)
 
-            async def _delete_token():
-                await redis.delete(f"reset_token:{token}")
-
-            await redis_breaker.call(async_retry, _delete_token, config=RetryConfig(max_retries=2, base_delay=0.2))
             return JSONResponse(
                 content={"message": "Account Password Reset Successfully"},
                 status_code=status.HTTP_200_OK,

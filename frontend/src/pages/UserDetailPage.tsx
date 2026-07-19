@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, ShieldAlert, X } from 'lucide-react'
+import { ArrowLeft, Ban, CheckCircle2, Plus, ShieldAlert, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { usersApi } from '@/lib/endpoints'
 import { apiErrorMessage } from '@/lib/api'
@@ -77,6 +77,15 @@ export function UserDetailPage() {
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not revoke permission')),
   })
 
+  const setActive = useMutation({
+    mutationFn: (active: boolean) => (active ? usersApi.activate(userId!) : usersApi.deactivate(userId!)),
+    onSuccess: (_data, active) => {
+      toast.success(active ? 'User activated' : 'User deactivated')
+      invalidate()
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update user')),
+  })
+
   if (userQuery.isLoading) {
     return (
       <div className="p-6">
@@ -108,6 +117,7 @@ export function UserDetailPage() {
     grants?.grantable_roles.filter((r) => !user.roles.includes(r.name)) ?? []
   const grantablePermissions =
     grants?.grantable_permissions.filter((p) => !user.permissions.includes(p.name)) ?? []
+  const canDeactivateUser = grants?.effective_permissions.includes('user:deactivate') ?? false
 
   return (
     <>
@@ -115,10 +125,23 @@ export function UserDetailPage() {
         title={user.username}
         description={user.email}
         actions={
-          <Button variant="outline" size="sm" render={<Link to="/users" />}>
-            <ArrowLeft />
-            Back
-          </Button>
+          <div className="flex items-center gap-2">
+            {canDeactivateUser && !user.is_superuser && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={setActive.isPending}
+                onClick={() => setActive.mutate(!user.is_active)}
+              >
+                {user.is_active ? <Ban /> : <CheckCircle2 />}
+                {user.is_active ? 'Deactivate' : 'Activate'}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" render={<Link to="/users" />}>
+              <ArrowLeft />
+              Back
+            </Button>
+          </div>
         }
       />
 
@@ -127,6 +150,7 @@ export function UserDetailPage() {
           <Badge variant={user.is_verified ? 'default' : 'outline'}>
             {user.is_verified ? 'Verified' : 'Unverified'}
           </Badge>
+          {!user.is_active && <Badge variant="destructive">Deactivated</Badge>}
           {user.is_superuser && (
             <Badge variant="secondary" className="gap-1">
               <ShieldAlert className="size-3" />

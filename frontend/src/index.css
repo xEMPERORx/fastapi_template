@@ -128,3 +128,18 @@
     @apply font-sans;
     }
 }
+
+/* System-wide, not per-component: every transition/animation collapses to
+   near-instant rather than being individually disabled. Catches shadcn's
+   built-in animate-pulse/animate-in/animate-out (skeletons, dialogs,
+   dropdowns, sheets) along with anything else added later. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

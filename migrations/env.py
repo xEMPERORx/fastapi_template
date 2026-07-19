@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from app.database.db import Base
-from app.models.db_model import User,Permission,Role
+from app.database.postgres_db import Base
+from app.models.db_model import User,Permission,Role,Tenant
 from alembic import context
 
 from app.settings import Config

@@ -2,7 +2,7 @@
 
 import pytest
 from pydantic import BaseModel, Field
-from app.core.data_validation import (
+from app.core.security.data_validation import (
     safe_filename,
     validate_model_fields,
     validate_required_fields,

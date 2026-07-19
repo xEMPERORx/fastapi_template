@@ -1,8 +1,9 @@
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from app.core.security.validation import SafeStr, StrongPassword
 from app.schema.auth import (
     GoogleAuthUrlResponse,
     GoogleOAuthCallbackResponse,
@@ -32,6 +33,8 @@ __all__ = [
     "UserListItem",
     "UserDetail",
     "GrantableSummary",
+    "UserCreate",
+    "UserCount",
 ]
 
 
@@ -59,6 +62,7 @@ class UserListItem(BaseModel):
     email: str
     is_verified: bool
     is_superuser: bool
+    is_active: bool
     created_by_id: Optional[uuid.UUID] = None
     roles: List[str] = []
 
@@ -85,3 +89,21 @@ class GrantableSummary(BaseModel):
     effective_permissions: List[str]
     grantable_roles: List[RoleSummary]
     grantable_permissions: List[PermissionSummary]
+
+
+class UserCount(BaseModel):
+    count: int
+
+
+class UserCreate(BaseModel):
+    """A tenant-admin (or anyone holding `user:create`) adding a new user to
+    their own tenant — distinct from `UserRegister`, which always creates a
+    global (`tenant_id = NULL`) self-service account. The actor's tenant is
+    applied server-side (`UserManagementService.create_user`); this schema
+    deliberately has no `tenant_id` field, same rationale as `is_superuser`
+    being absent from every request schema — never let the caller pick a
+    tenant to write into."""
+
+    username: SafeStr = Field(min_length=3, max_length=50)
+    email: EmailStr
+    password: StrongPassword

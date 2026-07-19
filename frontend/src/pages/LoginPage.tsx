@@ -29,7 +29,7 @@ export function LoginPage() {
       setTokens(tokens.access_token, tokens.refresh_token)
       const me = await authApi.me()
       setUser(me)
-      const redirectTo = (location.state as { from?: Location })?.from?.pathname ?? '/users'
+      const redirectTo = (location.state as { from?: Location })?.from?.pathname ?? '/'
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(apiErrorMessage(err, 'Invalid username or password.'))

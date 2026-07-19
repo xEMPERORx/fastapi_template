@@ -55,7 +55,7 @@ class TestUserRegister:
 ### Unit Tests (no HTTP, direct instantiation)
 
 ```python
-from app.services.auth.register import RegisterUser
+from app.services.auth.actions.register import RegisterUser
 
 async def test_service_logic():
     repo = MockUserRepository()
@@ -107,9 +107,36 @@ async def test_full_flow(ac: AsyncClient):
 - `tests/test_permissions_roles.py`'s `override_permission_dependencies` fixture
   bypasses `permission_checker`, `role_checker`, and the `grant_role_required()`/
   `grant_permission_required()` factories' `checker` — extend the `bypassed_names` set
-  there if you add a new dependency factory with its own inner function name.
+  there if you add a new dependency factory with its own inner function name. This
+  fixture is module-scoped (defined in that one file, not `conftest.py`) — any other
+  test file exercises the real `permission_required`/`role_required` logic and needs
+  genuinely authenticated, correctly-privileged tokens.
 
-Because tests run without Redis/Elasticsearch/a Celery broker, always use
+### The stale-token gotcha
+
+`permission_required`'s fast path (`get_current_principal`) trusts the JWT's
+`is_superuser`/`perm_mask`/`perm_version` claims, checked against the authz cache
+(`app.core.authz_cache`) rather than re-querying the DB. This means **a token minted
+before a privilege change stays stale until re-minted** — promoting a user to
+superuser, assigning them a role, or granting/revoking a permission all bump
+`perm_version` (or, for `is_superuser`, simply isn't reflected in an
+already-issued token at all). Concretely, in tests:
+- `make_superuser(ac, username, password="Password123!")` (in `tests/conftest.py`)
+  logs back in after the DB promotion and **returns the fresh token** — always use
+  that return value for any subsequent `permission_required`-gated call, not a token
+  captured before the promotion.
+- After assigning a role or granting a permission to a user mid-test, if that same
+  user then needs to exercise a `permission_required`-gated endpoint, re-login (or
+  call `/api/v1/auth/refresh`) first — otherwise the request 401s with
+  `error_code="stale_token"` instead of the behavior you're trying to test. See
+  `tests/test_role_creation_hierarchy.py::test_role_creation_within_grantable_permissions_succeeds`
+  for the pattern.
+- This does **not** apply to `grant_role_required()`/`grant_permission_required()`/
+  `superuser_required()`/`role_required()` — those stay DB-backed (`get_current_user`,
+  re-queried fresh every request), so a token from before the privilege change still
+  works fine for them.
+
+Because tests run without Redis/a Celery broker, always use
 `pytest --timeout=30` (via `pytest-timeout`, already a dev dependency) — a call that
 forgets a connection timeout (see the `fastapi-best-practices` skill's Resilience
 section) will otherwise hang the whole suite instead of failing fast.
@@ -119,7 +146,7 @@ section) will otherwise hang the whole suite instead of failing fast.
 For `app/core/` modules, write plain unit tests (no HTTP, no DB):
 
 ```python
-from app.core.validation import sanitize_text, validate_email
+from app.core.security.validation import sanitize_text, validate_email
 
 class TestSanitizeText:
     def test_strips_xss(self):

@@ -37,7 +37,7 @@ Create `app/schema/product.py`:
 
 ```python
 from pydantic import BaseModel, Field
-from app.core.validation import SafeStr
+from app.core.security.validation import SafeStr
 
 class ProductCreate(BaseModel):
     name: SafeStr = Field(..., min_length=1, max_length=255)
@@ -83,11 +83,27 @@ class ProductRepository(LoggedRepository):
 
 ### 4. Create Service
 
+Create `app/error/product.py` (a new domain gets its own exception file — see the
+`project-structure` skill):
+
+```python
+from app.error.base import AppException
+
+class ProductException(AppException):
+    pass
+
+class ProductExists(AppException):
+    def __init__(self, name: str = "unknown"):
+        super().__init__(f"Product '{name}' already exists", error_code="product_exists")
+```
+
+Register its handler in `app/error/register.py` alongside the others.
+
 Create `app/services/product/service.py`:
 
 ```python
 from app.core.logger import LoggedService
-from app.error.custom_exception import AppException
+from app.error.product import ProductExists
 from app.repositories.product.product import ProductRepository
 from app.schema.product import ProductCreate, ProductResponse
 from app.models.db_model import Product
@@ -99,10 +115,7 @@ class ProductService(LoggedService):
     async def create_product(self, data: ProductCreate) -> ProductResponse:
         existing = await self.repo.get_by_name(data.name)
         if existing:
-            raise AppException(
-                f"Product '{data.name}' already exists",
-                error_code="product_exists"
-            )
+            raise ProductExists(data.name)
         product = await self.repo.create(data)
         return ProductResponse.model_validate(product)
 
@@ -113,7 +126,8 @@ class ProductService(LoggedService):
 
 ### 5. Wire Dependencies
 
-Add to `app/core/dependency_factory.py`:
+Create `app/core/dependency_factory/product.py` (new domain → new module) and add it
+to the re-exports in `app/core/dependency_factory/__init__.py`:
 
 ```python
 def get_product_repository(db: AsyncSession = Depends(get_db)) -> ProductRepository:
@@ -180,7 +194,8 @@ alembic upgrade head
 - [ ] Schema in `app/schema/` with `model_config = {"from_attributes": True}`
 - [ ] Repository extends `LoggedRepository`
 - [ ] Service extends `LoggedService`, validates + raises exceptions
-- [ ] Dependencies wired in `dependency_factory.py`
+- [ ] Dependencies wired in `app/core/dependency_factory/<domain>.py`
+- [ ] Exceptions (if any) in `app/error/<domain>.py`, handlers registered in `app/error/register.py`
 - [ ] Router registered in `app/main.py`
 - [ ] Migration created and applied
 - [ ] Tests written (see write-tests skill)

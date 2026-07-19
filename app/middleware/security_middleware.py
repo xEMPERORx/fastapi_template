@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from app.core.logger import logger
-from app.core.validation import safe_str
+from app.core.security.validation import safe_str
 
 # Default security headers
 _SECURITY_HEADERS: dict[str, str] = {

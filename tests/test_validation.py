@@ -1,7 +1,7 @@
 """Tests for the Advanced Input Validation skill."""
 
 import pytest
-from app.core.validation import (
+from app.core.security.validation import (
     sanitize_text,
     strip_html,
     safe_str,

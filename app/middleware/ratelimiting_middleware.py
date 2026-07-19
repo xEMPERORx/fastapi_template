@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 
 from app.core.logger import log_error, logger
-from app.core.rate_limiters import limiter
-from app.error.custom_exception import RateLimit
+from app.core.ratelimit.limiters import limiter
+from app.error.ratelimit import RateLimit
 
 
 def register_ratelimit_middleware(app: FastAPI):

@@ -5,10 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.esclient import es_client as _es_client
 from app.core.health import HealthReport, run_all_checks
 from app.core.logger import log_function
-from app.database.db import get_db
+from app.database.postgres_db import get_db
 from app.database.redis_db import redis_connect
 
 router = APIRouter(tags=["Health"])
@@ -21,7 +20,6 @@ async def health_check(db: Annotated[AsyncSession, Depends(get_db)]):
     report: HealthReport = await run_all_checks(
         db=db,
         redis_client=redis_connect(),
-        es_client=_es_client,
     )
     return report.to_dict()
 
@@ -39,7 +37,6 @@ async def readiness(db: Annotated[AsyncSession, Depends(get_db)]):
     report: HealthReport = await run_all_checks(
         db=db,
         redis_client=redis_connect(),
-        es_client=_es_client,
     )
     if report.status == "unhealthy":
         from fastapi.responses import JSONResponse

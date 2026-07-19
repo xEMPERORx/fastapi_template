@@ -33,7 +33,11 @@
       "Bash(curl -s -o /dev/null -w \"index: %{http_code}\\\\n\" http://localhost:8000/)",
       "Bash(curl -s http://localhost:8000/api/v1/health)",
       "Bash(curl -s -o /dev/null -w \"health-live: %{http_code}\\\\n\" http://localhost:8000/api/v1/health/live)",
-      "Bash(curl -s http://localhost:8000/)"
+      "Bash(curl -s http://localhost:8000/)",
+      "Skill(run)",
+      "Bash(command -v uv)",
+      "Bash(command -v python)",
+      "Bash(command -v python3)"
     ]
   }
 }

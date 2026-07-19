@@ -21,19 +21,26 @@ async def register_and_login(ac: AsyncClient, username: str, email: str, passwor
     return me.json()["id"], token
 
 
-async def make_superuser(username: str) -> None:
+async def make_superuser(ac: AsyncClient, username: str, password: str = "Password123!") -> str:
     """Simulate what the seed script does: no API path can do this — is_superuser
-    is intentionally absent from every request schema."""
+    is intentionally absent from every request schema. Re-logs in afterward
+    and returns a fresh token — `is_superuser` is now a claim baked into the
+    access token at mint time, read by `permission_required`'s fast path
+    without a DB query, so a token minted before this promotion keeps
+    reading `is_superuser=False` until a new one is minted."""
     async with TestingSessionLocal() as session:
         user = await session.scalar(select(User).where(User.username == username))
         user.is_superuser = True
         await session.commit()
 
+    login = await ac.post("/api/v1/auth/login", data={"username": username, "password": password})
+    return login.json()["access_token"]
+
 
 @pytest.mark.asyncio
 async def test_superuser_bypasses_permission_checks(ac: AsyncClient):
-    _, token = await register_and_login(ac, "superadmin", "superadmin@example.com", "Password123!")
-    await make_superuser("superadmin")
+    _, _token = await register_and_login(ac, "superadmin", "superadmin@example.com", "Password123!")
+    token = await make_superuser(ac, "superadmin")
 
     response = await ac.post(
         "/api/v1/role/",
@@ -57,8 +64,8 @@ async def test_non_superuser_without_permission_is_forbidden(ac: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_grant_role_requires_delegation(ac: AsyncClient):
-    _, admin_token = await register_and_login(ac, "rbac-admin2", "rbac-admin2@example.com", "Password123!")
-    await make_superuser("rbac-admin2")
+    _, _admin_token = await register_and_login(ac, "rbac-admin2", "rbac-admin2@example.com", "Password123!")
+    admin_token = await make_superuser(ac, "rbac-admin2")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
     role_resp = await ac.post("/api/v1/role/", json={"name": "team-lead"}, headers=admin_headers)
@@ -95,12 +102,15 @@ async def test_grant_role_requires_delegation(ac: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_direct_permission_grant_and_revoke(ac: AsyncClient):
-    _, admin_token = await register_and_login(ac, "rbac-admin3", "rbac-admin3@example.com", "Password123!")
-    await make_superuser("rbac-admin3")
+    """Permissions are code-defined (see `app.core.rbac.registry`) and
+    seeded by `sync_permissions` on startup — there's no create endpoint
+    anymore, so this grants an already-seeded catalog permission directly."""
+    _, _admin_token = await register_and_login(ac, "rbac-admin3", "rbac-admin3@example.com", "Password123!")
+    admin_token = await make_superuser(ac, "rbac-admin3")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    perm_resp = await ac.post("/api/v1/permission/", json={"name": "reports:export"}, headers=admin_headers)
-    permission_id = perm_resp.json()["id"]
+    perm_list = await ac.get("/api/v1/permission/?skip=0&limit=200", headers=admin_headers)
+    permission_id = next(p["id"] for p in perm_list.json() if p["name"] == "user:deactivate")
 
     target_id, _ = await register_and_login(ac, "reportuser", "reportuser@example.com", "Password123!")
 
@@ -110,8 +120,8 @@ async def test_direct_permission_grant_and_revoke(ac: AsyncClient):
     assert grant_resp.status_code == 204
 
     detail = await ac.get(f"/api/v1/users/{target_id}", headers=admin_headers)
-    assert "reports:export" in detail.json()["permissions"]
-    assert "reports:export" in detail.json()["effective_permissions"]
+    assert "user:deactivate" in detail.json()["permissions"]
+    assert "user:deactivate" in detail.json()["effective_permissions"]
 
     revoke_resp = await ac.delete(
         f"/api/v1/users/{target_id}/permissions/{permission_id}", headers=admin_headers
@@ -119,13 +129,13 @@ async def test_direct_permission_grant_and_revoke(ac: AsyncClient):
     assert revoke_resp.status_code == 204
 
     detail2 = await ac.get(f"/api/v1/users/{target_id}", headers=admin_headers)
-    assert "reports:export" not in detail2.json()["permissions"]
+    assert "user:deactivate" not in detail2.json()["permissions"]
 
 
 @pytest.mark.asyncio
 async def test_me_grants_reflects_superuser(ac: AsyncClient):
     _, token = await register_and_login(ac, "rbac-admin4", "rbac-admin4@example.com", "Password123!")
-    await make_superuser("rbac-admin4")
+    await make_superuser(ac, "rbac-admin4")
 
     resp = await ac.get("/api/v1/users/me/grants", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200

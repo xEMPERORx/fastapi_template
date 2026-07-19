@@ -8,12 +8,14 @@ from app.models.rbac import (
     user_permissions,
     user_roles,
 )
+from app.models.tenant import Tenant
 
 __all__ = [
     "RefreshToken",
     "User",
     "Permission",
     "Role",
+    "Tenant",
     "role_permissions",
     "user_roles",
     "user_permissions",

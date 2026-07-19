@@ -4,7 +4,6 @@ Automated health-check logic.
 Provides status checks for:
 - Database connectivity
 - Redis connectivity
-- Elasticsearch connectivity
 - Overall application health
 """
 
@@ -83,30 +82,9 @@ async def check_redis(redis_client) -> HealthStatus:
         return HealthStatus(healthy=False, service="redis", latency_ms=latency, detail=str(exc))
 
 
-async def check_elasticsearch(es_client) -> HealthStatus:
-    """Ping Elasticsearch."""
-    start = time.monotonic()
-    try:
-        healthy = await es_client.ping()
-        latency = (time.monotonic() - start) * 1000
-        return HealthStatus(
-            healthy=bool(healthy),
-            service="elasticsearch",
-            latency_ms=latency,
-            detail="OK" if healthy else "ping returned False",
-        )
-    except Exception as exc:
-        latency = (time.monotonic() - start) * 1000
-        logger.exception("Elasticsearch health check failed")
-        return HealthStatus(
-            healthy=False, service="elasticsearch", latency_ms=latency, detail=str(exc)
-        )
-
-
 async def run_all_checks(
     db: AsyncSession | None = None,
     redis_client=None,
-    es_client=None,
 ) -> HealthReport:
     """Run all registered health checks and aggregate the result."""
     checks: list[HealthStatus] = []
@@ -116,9 +94,6 @@ async def run_all_checks(
 
     if redis_client:
         checks.append(await check_redis(redis_client))
-
-    if es_client:
-        checks.append(await check_elasticsearch(es_client))
 
     if not checks:
         return HealthReport(status="healthy", checks=[], timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"))

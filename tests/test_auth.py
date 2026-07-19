@@ -2,7 +2,7 @@ import uuid
 import pytest
 from httpx import AsyncClient
 from app.main import app
-from app.services.auth.auth import get_current_user
+from app.services.auth.current_user import get_current_user
 from tests.conftest import verify_user
 import os
 os.environ["ENV"] = "testing"
