@@ -7,7 +7,7 @@ from app.core.dependencies import superuser_required
 from app.core.dependency_factory import get_tenant_service
 from app.core.logger import log_function
 from app.models.db_model import User
-from app.schema.tenant import TenantCreate, TenantResponse, TenantWithAdminResponse
+from app.schema.tenant import TenantCreate, TenantPermissionsUpdate, TenantResponse, TenantWithAdminResponse
 from app.services.tenant.tenant_service import TenantService
 
 router = APIRouter(tags=["Tenants"])
@@ -62,3 +62,14 @@ async def activate_tenant(
     current_user: Annotated[User, Depends(superuser_required())],
 ):
     await service.set_tenant_active(current_user, tenant_id, is_active=True)
+
+
+@router.patch("/{tenant_id}/permissions", response_model=TenantResponse)
+@log_function
+async def update_tenant_permissions(
+    tenant_id: uuid.UUID,
+    data: TenantPermissionsUpdate,
+    service: Annotated[TenantService, Depends(get_tenant_service)],
+    current_user: Annotated[User, Depends(superuser_required())],
+):
+    return await service.update_tenant_permissions(current_user, tenant_id, data.allowed_permissions)

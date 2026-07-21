@@ -18,8 +18,8 @@ class TenantRepository(LoggedRepository):
     async def get_by_name(self, name: str) -> Tenant | None:
         return await self.db.scalar(select(Tenant).where(Tenant.name == name))
 
-    async def create(self, name: str) -> Tenant:
-        tenant = Tenant(name=name)
+    async def create(self, name: str, allowed_permission_mask: int = 0) -> Tenant:
+        tenant = Tenant(name=name, allowed_permission_mask=allowed_permission_mask)
         self.db.add(tenant)
         await self.db.commit()
         await self.db.refresh(tenant)
@@ -28,6 +28,12 @@ class TenantRepository(LoggedRepository):
     async def list_all(self, skip: int, limit: int) -> list[Tenant]:
         result = await self.db.scalars(select(Tenant).offset(skip).limit(limit))
         return result.all()
+
+    async def set_allowed_permission_mask(self, tenant: Tenant, mask: int) -> Tenant:
+        tenant.allowed_permission_mask = mask
+        await self.db.commit()
+        await self.db.refresh(tenant)
+        return tenant
 
     async def set_active(self, tenant: Tenant, is_active: bool) -> Tenant:
         tenant.is_active = is_active

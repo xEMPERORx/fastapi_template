@@ -59,6 +59,8 @@ docker-compose up --build
 docker-compose down
 ```
 
+First run: set `SEED_ADMIN_USERNAME`/`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` in `.env` before `docker compose up` and the `api` container bootstraps that superuser automatically on startup (see `entrypoint.sh` and the `seed-admin` skill) — no manual `python -m app.cli.seed` step needed.
+
 ### Celery Worker
 ```bash
 # Start Celery worker (for background tasks)
@@ -281,6 +283,7 @@ Key environment variables:
 - `SECRET_KEY`/`REFRESH_KEY`: JWT signing keys
 - `MAIL_*`: SMTP configuration for email verification
 - `GOOGLE_*`: OAuth credentials
+- `SEED_ADMIN_USERNAME`/`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`: when all three are set, `entrypoint.sh` runs `python -m app.cli.seed` automatically on container startup, bootstrapping the first `is_superuser=True` account. Idempotent — a no-op once that username exists. Leave unset to skip and seed manually (see the `seed-admin` skill).
 
 ## Test Configuration
 

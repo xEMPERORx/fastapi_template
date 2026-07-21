@@ -40,3 +40,11 @@ class PermissionRepository(LoggedRepository):
     async def list_all(self, skip: int, limit: int) -> list[Permission]:
         result = await self.db.scalars(select(Permission).offset(skip).limit(limit))
         return result.all()
+
+    async def list_by_names(self, names: list[str], skip: int, limit: int) -> list[Permission]:
+        if not names:
+            return []
+        result = await self.db.scalars(
+            select(Permission).where(Permission.name.in_(names)).offset(skip).limit(limit)
+        )
+        return result.all()

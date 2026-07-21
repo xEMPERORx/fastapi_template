@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Ban, CheckCircle2, ShieldAlert } from 'lucide-react'
@@ -5,6 +6,7 @@ import { toast } from 'sonner'
 import { tenantsApi, usersApi } from '@/lib/endpoints'
 import { apiErrorMessage } from '@/lib/api'
 import { PageHeader } from '@/components/PageHeader'
+import { PermissionCheckboxList } from '@/components/tenants/PermissionCheckboxList'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -42,6 +44,29 @@ export function TenantDetailPage() {
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not update tenant')),
   })
+
+  const [editedPermissions, setEditedPermissions] = useState<string[] | null>(null)
+  useEffect(() => {
+    if (tenantQuery.data && editedPermissions === null) {
+      setEditedPermissions(tenantQuery.data.allowed_permissions)
+    }
+  }, [tenantQuery.data, editedPermissions])
+
+  const updatePermissions = useMutation({
+    mutationFn: (names: string[]) => tenantsApi.updatePermissions(tenantId!, names),
+    onSuccess: (updated) => {
+      toast.success("Tenant's permission ceiling updated")
+      setEditedPermissions(updated.allowed_permissions)
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update permissions')),
+  })
+
+  const permissionsDirty =
+    editedPermissions !== null &&
+    tenantQuery.data !== undefined &&
+    (editedPermissions.length !== tenantQuery.data.allowed_permissions.length ||
+      editedPermissions.some((name) => !tenantQuery.data!.allowed_permissions.includes(name)))
 
   if (tenantQuery.isLoading) {
     return (
@@ -96,6 +121,30 @@ export function TenantDetailPage() {
             {tenant.is_active ? 'Active' : 'Deactivated'}
           </Badge>
         </div>
+
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Permission ceiling</h2>
+            <p className="text-xs text-muted-foreground">
+              What this tenant's roles may ever hold. The tenant admin only sees and grants
+              permissions from within this set — narrowing it here doesn't retroactively strip
+              permissions already assigned to a role, only bounds new ones going forward.
+            </p>
+          </div>
+          <PermissionCheckboxList
+            selected={editedPermissions ?? []}
+            onChange={setEditedPermissions}
+          />
+          <div>
+            <Button
+              size="sm"
+              disabled={!permissionsDirty || updatePermissions.isPending}
+              onClick={() => editedPermissions && updatePermissions.mutate(editedPermissions)}
+            >
+              Save permission ceiling
+            </Button>
+          </div>
+        </section>
 
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold">Users ({users.length})</h2>

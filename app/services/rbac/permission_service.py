@@ -13,5 +13,11 @@ class PermissionService(LoggedService):
             raise PermissionNotFound(permission_id)
         return permission
 
-    async def get_all_permissions(self, skip: int, limit: int):
-        return await self.repo.list_all(skip, limit)
+    async def get_all_permissions(self, skip: int, limit: int, names: list[str] | None = None):
+        """`names=None` returns the full catalog (superuser). Otherwise
+        restricted to exactly that set — see `read_permissions` in
+        `app/api/v1/routes/rbac/permission.py` for why a non-superuser only
+        ever passes their own effective permission names."""
+        if names is None:
+            return await self.repo.list_all(skip, limit)
+        return await self.repo.list_by_names(names, skip, limit)

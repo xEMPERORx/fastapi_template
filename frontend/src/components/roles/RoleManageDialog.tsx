@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { permissionsApi, rolesApi } from '@/lib/endpoints'
+import { permissionsApi, rolesApi, usersApi } from '@/lib/endpoints'
 import { apiErrorMessage } from '@/lib/api'
 import type { Role } from '@/lib/types'
 import {
@@ -119,6 +119,14 @@ export function RoleManageDialog({
     queryKey: ['role', role.id, 'grants'],
     queryFn: () => rolesApi.getGrants(role.id),
   })
+  // What the *acting* user is personally allowed to hand out — narrower than
+  // the full catalog above (which is id-lookup data for removing whatever a
+  // role already has, even something the actor can no longer grant). Used to
+  // restrict the "Add..." pickers below so they never offer a permission or
+  // role the actor isn't configured to delegate; the backend enforces the
+  // same bound (`RoleService._grantable_mask_for`), this just avoids a
+  // guaranteed-to-fail request.
+  const myGrantsQuery = useQuery({ queryKey: ['me', 'grants'], queryFn: () => usersApi.myGrants() })
 
   function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: ['roles'] })
@@ -181,7 +189,8 @@ export function RoleManageDialog({
     onError: (err) => toast.error(apiErrorMessage(err)),
   })
 
-  const otherRoles = (rolesQuery.data ?? []).filter((r) => r.id !== role.id)
+  const grantableRoleOptions = (myGrantsQuery.data?.grantable_roles ?? []).filter((r) => r.id !== role.id)
+  const grantablePermissionOptions = myGrantsQuery.data?.grantable_permissions ?? []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -205,7 +214,7 @@ export function RoleManageDialog({
               title="Role permissions"
               hint="What this role itself grants to anyone who holds it."
               items={role.permissions}
-              options={permissionsQuery.data ?? []}
+              options={grantablePermissionOptions}
               pending={addPermission.isPending || removePermission.isPending}
               onAdd={(id) => addPermission.mutate(id)}
               onRemove={(name) => {
@@ -220,7 +229,7 @@ export function RoleManageDialog({
               title="Delegatable roles"
               hint="Roles that a holder of this role is allowed to assign to other users."
               items={grantsQuery.data?.grantable_roles ?? []}
-              options={otherRoles}
+              options={grantableRoleOptions}
               pending={addGrantableRole.isPending || removeGrantableRole.isPending}
               onAdd={(id) => addGrantableRole.mutate(id)}
               onRemove={(name) => {
@@ -235,7 +244,7 @@ export function RoleManageDialog({
               title="Delegatable permissions"
               hint="Permissions that a holder of this role is allowed to grant directly to a user."
               items={grantsQuery.data?.grantable_permissions ?? []}
-              options={permissionsQuery.data ?? []}
+              options={grantablePermissionOptions}
               pending={addGrantablePermission.isPending || removeGrantablePermission.isPending}
               onAdd={(id) => addGrantablePermission.mutate(id)}
               onRemove={(name) => {

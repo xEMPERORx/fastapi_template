@@ -3,9 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Ban, CheckCircle2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { tenantsApi } from '@/lib/endpoints'
+import { permissionsApi, tenantsApi } from '@/lib/endpoints'
 import { apiErrorMessage } from '@/lib/api'
 import { PageHeader } from '@/components/PageHeader'
+import { PermissionCheckboxList } from '@/components/tenants/PermissionCheckboxList'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,7 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const emptyForm = { name: '', adminUsername: '', adminEmail: '', adminPassword: '' }
+const emptyForm = { name: '', adminUsername: '', adminEmail: '', adminPassword: '', allowedPermissions: [] as string[] }
 
 export function TenantsPage() {
   const queryClient = useQueryClient()
@@ -37,13 +38,23 @@ export function TenantsPage() {
     queryKey: ['tenants'],
     queryFn: () => tenantsApi.list(),
   })
+  const { data: fullCatalog } = useQuery({
+    queryKey: ['permissions', 'catalog'],
+    queryFn: () => permissionsApi.list(0, 200),
+  })
 
   const [createOpen, setCreateOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
 
   const createTenant = useMutation({
     mutationFn: () =>
-      tenantsApi.create(form.name, form.adminUsername, form.adminEmail, form.adminPassword),
+      tenantsApi.create(
+        form.name,
+        form.adminUsername,
+        form.adminEmail,
+        form.adminPassword,
+        form.allowedPermissions,
+      ),
     onSuccess: (result) => {
       toast.success(`Tenant "${result.tenant.name}" created`, {
         description: `Admin account: ${result.admin.username} (${result.admin.email})`,
@@ -81,12 +92,22 @@ export function TenantsPage() {
         title="Tenants"
         description="Every organization on this deployment. Creating a tenant also creates its first admin account."
         actions={
-          <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) setForm(emptyForm) }}>
+          <Dialog
+            open={createOpen}
+            onOpenChange={(open) => {
+              setCreateOpen(open)
+              if (open) {
+                setForm({ ...emptyForm, allowedPermissions: (fullCatalog ?? []).map((p) => p.name) })
+              } else {
+                setForm(emptyForm)
+              }
+            }}
+          >
             <DialogTrigger render={<Button size="sm" />}>
               <Plus />
               New tenant
             </DialogTrigger>
-            <DialogContent className="sm:max-w-sm">
+            <DialogContent className="sm:max-w-lg">
               <form onSubmit={handleCreate}>
                 <DialogHeader>
                   <DialogTitle>New tenant</DialogTitle>
@@ -137,6 +158,17 @@ export function TenantsPage() {
                       value={form.adminPassword}
                       onChange={(e) => setForm((f) => ({ ...f, adminPassword: e.target.value }))}
                       required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Permissions this tenant may use</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Sets the ceiling for every role this tenant ever creates. All selected by
+                      default — narrow it if this tenant shouldn't have the full catalog available.
+                    </p>
+                    <PermissionCheckboxList
+                      selected={form.allowedPermissions}
+                      onChange={(names) => setForm((f) => ({ ...f, allowedPermissions: names }))}
                     />
                   </div>
                 </div>

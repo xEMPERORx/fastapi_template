@@ -11,18 +11,21 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# Anchored to the repo root (leading /) — unanchored, these also matched
+# nested source directories with the same name, e.g. frontend/src/lib/,
+# which silently kept the entire frontend API client untracked.
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
+/build/
+/develop-eggs/
+/dist/
+/downloads/
+/eggs/
+/.eggs/
+/lib/
+/lib64/
+/parts/
+/sdist/
+/var/
 wheels/
 share/python-wheels/
 *.egg-info/

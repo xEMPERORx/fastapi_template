@@ -56,12 +56,13 @@ class RoleRepository(LoggedRepository):
         await self.db.refresh(db_role)
         return await self.get_by_id(db_role.id)
 
-    async def create_root_tenant_role(self, tenant_id: uuid.UUID) -> Role:
-        """The first, all-permissions role for a brand-new tenant's admin
-        user — sets `permission_mask` to every catalog bit *a tenant-scoped
-        role can meaningfully hold* (`TENANT_ROLE_MASK`, not `FULL_MASK`) and
-        configures it as able to grant all of those to others (see
-        `TenantService.create_tenant_with_admin`).
+    async def create_root_tenant_role(self, tenant_id: uuid.UUID, allowed_permission_mask: int) -> Role:
+        """The first role for a brand-new tenant's admin user — sets
+        `permission_mask` to `allowed_permission_mask` (the tenant's
+        superuser-configured ceiling, see `TenantService.create_tenant_with_admin`
+        and `Tenant.allowed_permission_mask`), clamped to `TENANT_ROLE_MASK`
+        as a hard backstop, and configures it as able to grant all of those
+        to others.
 
         Deliberately excludes `SUPERUSER_ONLY_PERMISSIONS` (`tenant:*`) —
         those are only ever checked via `superuser_required()`, never a mask
@@ -70,12 +71,16 @@ class RoleRepository(LoggedRepository):
         grants."""
         from app.core.rbac.registry import SUPERUSER_ONLY_PERMISSIONS, TENANT_ROLE_MASK
 
-        permission_rows = (
+        effective_mask = allowed_permission_mask & TENANT_ROLE_MASK
+        all_rows = (
             await self.db.scalars(
                 select(Permission).where(Permission.name.notin_(SUPERUSER_ONLY_PERMISSIONS))
             )
         ).all()
-        db_role = Role(name="tenant-admin", tenant_id=tenant_id, permission_mask=TENANT_ROLE_MASK)
+        permission_rows = [
+            p for p in all_rows if p.bit_position is not None and effective_mask & (1 << p.bit_position)
+        ]
+        db_role = Role(name="tenant-admin", tenant_id=tenant_id, permission_mask=effective_mask)
         db_role.permissions = list(permission_rows)
         self.db.add(db_role)
         await self.db.flush()
@@ -88,6 +93,56 @@ class RoleRepository(LoggedRepository):
         await self.db.commit()
         await self.db.refresh(db_role)
         return await self.get_by_id(db_role.id)
+
+    async def sync_root_tenant_role_permissions(
+        self, tenant_id: uuid.UUID, allowed_permission_mask: int
+    ) -> Role | None:
+        """Re-syncs a tenant's bootstrap "tenant-admin" role (and what it's
+        configured to grant) to a newly-edited ceiling — see
+        `TenantService.update_tenant_permissions`. Only touches that one
+        root role; any other role the tenant admin has since created keeps
+        whatever it already holds, bounded going forward by the new ceiling
+        via `RoleService.create_role`/`add_permission_to_role`, not
+        retroactively stripped here. Returns None if the tenant has no such
+        role (shouldn't happen outside hand-built test fixtures)."""
+        from app.core.rbac.registry import SUPERUSER_ONLY_PERMISSIONS, TENANT_ROLE_MASK
+
+        role = await self.db.scalar(
+            select(Role)
+            .options(selectinload(Role.permissions))
+            .where(Role.tenant_id == tenant_id, Role.name == "tenant-admin")
+        )
+        if role is None:
+            return None
+
+        effective_mask = allowed_permission_mask & TENANT_ROLE_MASK
+        all_rows = (
+            await self.db.scalars(
+                select(Permission).where(Permission.name.notin_(SUPERUSER_ONLY_PERMISSIONS))
+            )
+        ).all()
+        permission_rows = [
+            p for p in all_rows if p.bit_position is not None and effective_mask & (1 << p.bit_position)
+        ]
+
+        role.permissions = list(permission_rows)
+        role.permission_mask = effective_mask
+        await self.db.flush()
+
+        await self.db.execute(
+            delete(role_grantable_permissions).where(role_grantable_permissions.c.role_id == role.id)
+        )
+        if permission_rows:
+            await self.db.execute(
+                insert(role_grantable_permissions),
+                [{"role_id": role.id, "permission_id": perm.id} for perm in permission_rows],
+            )
+
+        events = await self._bump_perm_version_for_role_holders(role.id)
+        await self.db.commit()
+        await self.db.refresh(role)
+        await publish_events(events)
+        return await self.get_by_id(role.id)
 
     async def update(self, role: Role, update_data: dict) -> Role:
         for key, value in update_data.items():

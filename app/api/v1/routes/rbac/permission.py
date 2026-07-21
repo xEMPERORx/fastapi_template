@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
+from app.core.rbac.registry import names_for_mask
 from app.schema.rbac.permission import PermissionResponse
 from typing import Annotated
 from app.core.dependency_factory import get_permission_service
 from app.core.dependencies import permission_required
+from app.core.rbac.principal import Principal
 from app.services.rbac.permission_service import PermissionService
 from app.core.logger import log_function
 
@@ -24,11 +26,17 @@ async def read_permission(
 ):
     return await permission_service.get_permission(permission_id)
 
-@router.get("/", response_model=list[PermissionResponse],dependencies=[Depends(permission_required("permission:read"))])
+@router.get("/", response_model=list[PermissionResponse])
 @log_function
 async def read_permissions(
     permission_service: Annotated[PermissionService, Depends(get_permission_service)],
+    principal: Annotated[Principal, Depends(permission_required("permission:read"))],
     skip: int = 0,
     limit: int = 10,
 ):
-    return await permission_service.get_all_permissions(skip, limit)
+    """A superuser sees the whole catalog. Everyone else sees only the
+    permissions actually held in their own effective mask — a tenant admin
+    (or any role holder) shouldn't see the wider catalog of permissions that
+    exist on the deployment but were never granted to them."""
+    names = None if principal.is_superuser else names_for_mask(principal.perm_mask)
+    return await permission_service.get_all_permissions(skip, limit, names)

@@ -1,4 +1,5 @@
 from app.core.logger import LoggedService
+from app.core.rbac.registry import TENANT_ROLE_MASK, mask_for
 from app.error.auth import UserMailExist, UsernameExist
 from app.error.rbac import SuperuserRequired
 from app.error.tenant import TenantExists, TenantNotFound
@@ -44,8 +45,12 @@ class TenantService(LoggedService):
         if await self.user_repo.exists_by_email(data.admin_email):
             raise UserMailExist(data.admin_email)
 
-        tenant = await self.tenant_repo.create(data.name)
-        admin_role = await self.role_repo.create_root_tenant_role(tenant.id)
+        allowed_mask = (
+            mask_for(data.allowed_permissions) if data.allowed_permissions is not None else TENANT_ROLE_MASK
+        ) & TENANT_ROLE_MASK
+
+        tenant = await self.tenant_repo.create(data.name, allowed_permission_mask=allowed_mask)
+        admin_role = await self.role_repo.create_root_tenant_role(tenant.id, allowed_mask)
         admin_user = await self.user_repo.create(
             username=data.admin_username,
             email=data.admin_email,
@@ -72,3 +77,19 @@ class TenantService(LoggedService):
             raise SuperuserRequired()
         tenant = await self.get_tenant(tenant_id)
         return await self.tenant_repo.set_active(tenant, is_active)
+
+    async def update_tenant_permissions(self, actor: User, tenant_id, allowed_permissions: list[str]) -> Tenant:
+        """Superuser-only: raise or lower a tenant's permission ceiling after
+        creation. Also re-syncs the tenant's bootstrap "tenant-admin" role to
+        the new mask (see `RoleRepository.sync_root_tenant_role_permissions`)
+        so raising the ceiling is immediately usable, not just recorded —
+        without that, a superuser widening a tenant's ceiling would have no
+        visible effect until someone separately edited the root role by hand.
+        """
+        if not actor.is_superuser:
+            raise SuperuserRequired()
+        tenant = await self.get_tenant(tenant_id)
+        allowed_mask = mask_for(allowed_permissions) & TENANT_ROLE_MASK
+        tenant = await self.tenant_repo.set_allowed_permission_mask(tenant, allowed_mask)
+        await self.role_repo.sync_root_tenant_role_permissions(tenant.id, allowed_mask)
+        return tenant
